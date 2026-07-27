@@ -18,18 +18,59 @@ troubleshooting.
 
 Everything ships as one plugin, `appstack`, published to the Claude Code, Codex,
 and Cursor marketplaces. Installing as a plugin keeps the skill updatable through
-your agent's marketplace. Any other agent can use the manual copy at the end.
+your agent's marketplace.
+
+**Install once per agent you actually use.** Each section below is self-contained —
+if you only use Claude Code, the Claude Code section is all you need. Within a
+single agent, one install covers both its CLI and its desktop app. Any other agent
+can use the manual copy at the end.
 
 ### Claude Code
 
+**If you have the `claude` CLI** — this also covers the Code tab of Claude Desktop,
+which shares the same `~/.claude` config:
+
 ```bash
-/plugin marketplace add appstack-tech/appstack-skills
-/plugin install appstack@appstack-plugins
+claude plugin marketplace add appstack-tech/appstack-skills
+claude plugin install appstack@appstack-plugins
 ```
 
-Then restart or run `/reload-plugins`. The skill activates automatically when
-you're working on an Appstack SDK integration; you can also invoke it explicitly
-with `/appstack:appstack-sdk`.
+Inside the CLI you can use `/plugin marketplace add appstack-tech/appstack-skills`
+and `/plugin install appstack@appstack-plugins` instead, then `/reload-plugins`.
+
+**If you only have Claude Desktop** (the app with Chat, Cowork, and Code tabs):
+installing the app does *not* add a `claude` command to your terminal. Pick the
+route that matches the tab you work in:
+
+- **Chat or Cowork tab** — add the marketplace from the UI: **Customize → Plugins
+  → Personal plugins → + → Add marketplace**, then sync it from this repository.
+- **Code tab** — its plugin browser installs from marketplaces you already have,
+  but cannot register a new one. Either install the CLI and use the commands
+  above:
+
+  ```bash
+  curl -fsSL https://claude.ai/install.sh | bash
+  ```
+
+  or register the marketplace yourself in `.claude/settings.json` (project scope)
+  or `~/.claude/settings.json` (all projects):
+
+  ```json
+  {
+    "extraKnownMarketplaces": {
+      "appstack-plugins": {
+        "source": { "source": "github", "repo": "appstack-tech/appstack-skills" }
+      }
+    },
+    "enabledPlugins": { "appstack@appstack-plugins": true }
+  }
+  ```
+
+The skill activates automatically when you're working on an Appstack SDK
+integration; you can also invoke it explicitly with `/appstack:appstack-sdk`.
+
+Cloud sessions (claude.ai/code) don't inherit a local install — use the
+`.claude/settings.json` form above so the plugin travels with the repo.
 
 ### Codex
 
@@ -38,8 +79,25 @@ codex plugin marketplace add appstack-tech/appstack-skills --ref main
 codex plugin add appstack@appstack-plugins
 ```
 
-You can also open `/plugins` in the Codex TUI and install `appstack` from the
-Appstack marketplace. Verify with `codex plugin list`.
+Verify with `codex plugin list`, then start a new session. This also covers Codex
+in the ChatGPT desktop app, which reads the same `~/.codex/config.toml` — its
+plugin directory has no UI for adding third-party marketplaces, so the CLI step
+above is required. You can also browse `/plugins` in the Codex TUI.
+
+Signing in with an API key restricts installs to OpenAI-curated plugins, and
+enterprise configs may allowlist marketplace sources.
+
+### Using both Claude Code and Codex?
+
+Skip this if you use one of them — that agent's section above is complete on its own.
+
+Claude Code and Codex keep separate plugin registries (`~/.claude` vs `~/.codex`),
+and neither can see the other's installs. So if you use both, install in both.
+Within a single agent you only install once — its CLI and its desktop surface share
+one registry.
+
+Codex CLI 0.145.0+ can also import an existing Claude Code setup (settings, MCP
+servers, plugins) with `/import`, instead of installing from scratch.
 
 ### Cursor
 
