@@ -1,7 +1,7 @@
 {
   "name": "appstack",
   "displayName": "Appstack",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter): installation, initialization, event taxonomy, enhanced app campaigns, partner integrations, and troubleshooting.",
   "author": {
     "name": "Appstack",
