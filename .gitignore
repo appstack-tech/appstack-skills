@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Editor / local
+.vscode/
+.idea/
+*.log
+
+# Isolated tooling homes (e.g. Codex marketplace validation)
+.context/
