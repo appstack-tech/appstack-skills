@@ -1,0 +1,18 @@
+{
+  "name": "appstack-plugins",
+  "owner": {
+    "name": "Appstack",
+    "email": "support@appstack.tech"
+  },
+  "metadata": {
+    "description": "Appstack developer tooling for Cursor",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "appstack",
+      "source": "./plugins/appstack",
+      "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter)."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "appstack-plugins",
+  "owner": {
+    "name": "Appstack",
+    "email": "support@appstack.tech"
+  },
+  "description": "Appstack developer tooling for Claude Code.",
+  "plugins": [
+    {
+      "name": "appstack",
+      "source": "./plugins/appstack",
+      "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter).",
+      "homepage": "https://docs.appstack.tech",
+      "license": "MIT",
+      "keywords": ["appstack", "attribution", "mobile", "sdk", "ios", "android", "react-native", "flutter"]
+    }
+  ]
+}
