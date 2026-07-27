@@ -102,10 +102,20 @@ for (const pluginPath of referencedPlugins) {
   if (versions.size === 1) ok(`version locked: ${[...versions][0]}`);
   else bad(`version mismatch across manifests: ${[...versions].join(", ")}`);
 
-  // Icon/logo assets referenced by the Codex manifest must exist.
+  // Codex interface constraints (per Codex plugin.json spec) + asset existence.
   try {
     const iface = readJson(join(pluginPath, ".codex-plugin/plugin.json")).interface ?? {};
-    for (const key of ["composerIcon", "logo", "screenshots"]) {
+    const prompts = iface.defaultPrompt ?? [];
+    if (prompts.length > 3) bad(`codex interface.defaultPrompt has ${prompts.length} entries (max 3)`);
+    else ok(`codex interface.defaultPrompt count ok (${prompts.length}/3)`);
+    for (const p of prompts) {
+      if (p.length > 128) bad(`defaultPrompt over 128 chars (${p.length}): "${p.slice(0, 40)}…"`);
+    }
+    if (iface.screenshots && iface.screenshots.length > 3)
+      bad(`codex interface.screenshots has ${iface.screenshots.length} entries (max 3)`);
+    if (iface.brandColor && !/^#[0-9A-Fa-f]{6}$/.test(iface.brandColor))
+      bad(`codex interface.brandColor "${iface.brandColor}" is not a 6-digit hex color`);
+    for (const key of ["composerIcon", "logo", "logoDark", "screenshots"]) {
       const vals = Array.isArray(iface[key]) ? iface[key] : iface[key] ? [iface[key]] : [];
       for (const v of vals) {
         const assetPath = join(pluginPath, v.replace(/^\.\//, ""));

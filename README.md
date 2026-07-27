@@ -35,15 +35,30 @@ with `/appstack:appstack-sdk`.
 
 ```bash
 codex plugin marketplace add appstack-tech/appstack-skills --ref main
+codex plugin add appstack@appstack-plugins
 ```
 
-Then open `/plugins` in Codex and install `appstack` from the Appstack marketplace.
+You can also open `/plugins` in the Codex TUI and install `appstack` from the
+Appstack marketplace. Verify with `codex plugin list`.
 
 ### Cursor
 
-Add this repository as a plugin marketplace in Cursor's plugin settings, then
-install the `appstack` plugin from it. The repo ships the Cursor marketplace at
-`.cursor-plugin/marketplace.json`.
+Cursor installs third-party marketplaces through **Team Marketplaces**, which is
+admin-only and requires a Teams or Enterprise plan:
+
+> Dashboard → Plugins → Team Marketplaces → Add Marketplace → **Import from Repo**,
+> then paste this repository's GitHub URL.
+
+Install the `appstack` plugin from that marketplace via `/plugin` in `cursor-agent`
+or `/add-plugin` in the editor. Cursor has no scriptable plugin-install command
+today, so this step is interactive.
+
+If you can't use Team Marketplaces, install the skill directly with the
+cross-agent [skills CLI](https://github.com/vercel-labs/skills):
+
+```bash
+npx skills add appstack-tech/appstack-skills -a cursor
+```
 
 ### Any agent — copy the skill (no plugin tooling)
 

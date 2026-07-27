@@ -19,5 +19,6 @@
     "react-native",
     "flutter"
   ],
+  "logo": "./assets/icon.png",
   "skills": "./skills/"
 }
