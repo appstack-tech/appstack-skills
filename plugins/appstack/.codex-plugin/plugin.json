@@ -1,7 +1,7 @@
 {
   "name": "appstack",
-  "version": "1.0.1",
-  "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter): installation, initialization, event taxonomy, enhanced app campaigns, partner integrations, and troubleshooting.",
+  "version": "1.1.0",
+  "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter), and for using the Appstack Analytics MCP connector efficiently.",
   "author": {
     "name": "Appstack",
     "email": "support@appstack.tech",
@@ -23,8 +23,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Appstack",
-    "shortDescription": "Integrate and use the Appstack mobile attribution SDKs the right way",
-    "longDescription": "Official Appstack-authored skill for integrating the Appstack mobile attribution SDKs across Swift (iOS), Kotlin (Android), React Native, and Flutter: installation, where to initialize on each platform, the event taxonomy (standard vs. custom events), enhanced app campaigns with revenue and matching parameters, partner integrations like Superwall and RevenueCat, and troubleshooting attribution and events not appearing.",
+    "shortDescription": "Integrate the Appstack SDKs and use the Appstack Analytics MCP connector the right way",
+    "longDescription": "Official Appstack-authored skills: (1) integrating the Appstack mobile attribution SDKs across Swift (iOS), Kotlin (Android), React Native, and Flutter — installation, where to initialize on each platform, the event taxonomy (standard vs. custom events), enhanced app campaigns with revenue and matching parameters, partner integrations like Superwall and RevenueCat, and troubleshooting attribution and events not appearing; and (2) using the Appstack Analytics MCP connector efficiently — correct tool call order, exact Cube measure/dimension naming, and resolving an organization by name.",
     "developerName": "Appstack",
     "category": "Developer Tools",
     "capabilities": ["Read", "Write"],
@@ -34,7 +34,8 @@
     "defaultPrompt": [
       "Integrate the Appstack SDK into my app",
       "Review my Appstack integration",
-      "Debug why my Appstack events are not appearing"
+      "Debug why my Appstack events are not appearing",
+      "Query my Appstack analytics data"
     ],
     "composerIcon": "./assets/icon.png",
     "logo": "./assets/icon.png",

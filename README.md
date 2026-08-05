@@ -12,6 +12,12 @@ should stay few), enhanced app campaigns (revenue + matching parameters), partne
 integrations (Superwall, RevenueCat), what the SDK can and can't do, and
 troubleshooting.
 
+The second skill, `appstack-mcp`, teaches an assistant how to use the
+**Appstack Analytics MCP connector** efficiently — the correct tool call order
+(`whoami`/`find_organization` first, discover measure and dimension names
+before querying instead of guessing), exact Cube naming conventions, and which
+tools are read-only vs. the ones that write real data.
+
 > Not sure what Appstack is? See the docs at https://docs.appstack.tech
 
 ## Install
@@ -66,8 +72,9 @@ route that matches the tab you work in:
   }
   ```
 
-The skill activates automatically when you're working on an Appstack SDK
-integration; you can also invoke it explicitly with `/appstack:appstack-sdk`.
+Each skill activates automatically when it's relevant — SDK integration work for
+`appstack-sdk`, Appstack MCP tool calls for `appstack-mcp` — or invoke one
+explicitly with `/appstack:appstack-sdk` or `/appstack:appstack-mcp`.
 
 Cloud sessions (claude.ai/code) don't inherit a local install — use the
 `.claude/settings.json` form above so the plugin travels with the repo.
@@ -120,10 +127,12 @@ npx skills add appstack-tech/appstack-skills -a cursor
 
 ### Any agent — copy the skill (no plugin tooling)
 
-Copy the skill folder into your project (or `~/.claude/skills/` for all projects):
+Copy the skill folder(s) you want into your project (or `~/.claude/skills/` for
+all projects):
 
 ```bash
 cp -r plugins/appstack/skills/appstack-sdk .claude/skills/appstack-sdk
+cp -r plugins/appstack/skills/appstack-mcp .claude/skills/appstack-mcp
 ```
 
 ## What's inside
@@ -140,19 +149,25 @@ plugins/appstack/                        # the "appstack" plugin (umbrella; more
 ├── .cursor-plugin/plugin.json           # Cursor manifest
 ├── assets/icon.png                      # plugin icon
 └── skills/
-    └── appstack-sdk/                    # the Appstack SDK skill
-        ├── SKILL.md                     # cross-cutting best practices (always loaded)
-        ├── agents/openai.yaml           # Codex trigger metadata
-        └── references/
-            ├── swift.md                 # iOS: install, init, examples, partners
-            ├── kotlin.md                # Android
-            ├── react-native.md          # React Native
-            └── flutter.md               # Flutter
+    ├── appstack-sdk/                    # the Appstack SDK skill
+    │   ├── SKILL.md                     # cross-cutting best practices (always loaded)
+    │   ├── agents/openai.yaml           # Codex trigger metadata
+    │   └── references/
+    │       ├── swift.md                 # iOS: install, init, examples, partners
+    │       ├── kotlin.md                # Android
+    │       ├── react-native.md          # React Native
+    │       └── flutter.md               # Flutter
+    └── appstack-mcp/                    # the Appstack Analytics MCP usage skill
+        └── SKILL.md                     # tool call order, Cube naming conventions
 ```
 
-`SKILL.md` holds the platform-agnostic rules (event taxonomy, EACs, environments,
-limitations). Each `references/*.md` holds that platform's exact install/init code
-and examples, loaded on demand. Unity SDK is intentionally out of scope for now.
+`appstack-sdk`'s `SKILL.md` holds the platform-agnostic rules (event taxonomy,
+EACs, environments, limitations); each `references/*.md` holds that platform's
+exact install/init code and examples, loaded on demand. Unity SDK is
+intentionally out of scope for now.
+
+`appstack-mcp` is a single `SKILL.md` — no per-platform split needed, since it's
+about how to call the MCP tools well, not about a specific client platform.
 
 ## Contributing / updating
 
