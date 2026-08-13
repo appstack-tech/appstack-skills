@@ -6,9 +6,9 @@ usage, and partner integrations.
 
 ## Requirements
 
-- iOS 13.0+ (14.3+ for Apple Ads attribution)
-- Xcode 14.0+
-- Swift 5.0+
+- iOS 15.0+
+- Xcode 16.0+
+- Swift 6-compatible toolchain (the distributed framework is built with Swift 6)
 
 ## Install (Swift Package Manager)
 
@@ -32,7 +32,6 @@ your app uses, never both.
 
 ```swift
 import UIKit
-import AppTrackingTransparency
 import AppstackSDK
 
 @main
@@ -41,17 +40,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         AppstackAttributionSdk.shared.configure(
             apiKey: "your_api_key",
-            isDebug: false,          // true only with a development key
-            endpointBaseUrl: nil,
             logLevel: .info
         )
 
-        // Apple Ads attribution inside the ATT flow (iOS 14.3+)
-        if #available(iOS 14.3, *) {
-            ATTrackingManager.requestTrackingAuthorization { _ in
-                AppstackASAAttribution.shared.enableAppleAdsAttribution()
-            }
-        }
+        // Call after configure when Apple Ads attribution is needed (iOS 15+).
+        AppstackASAAttribution.shared.enableAppleAdsAttribution()
         return true
     }
 }
@@ -64,7 +57,7 @@ SwiftUI:
 struct MyApp: App {
     init() {
         AppstackAttributionSdk.shared.configure(
-            apiKey: "your_api_key", isDebug: false, endpointBaseUrl: nil, logLevel: .info
+            apiKey: "your_api_key", logLevel: .info
         )
     }
     var body: some Scene { WindowGroup { ContentView() } }
@@ -74,9 +67,22 @@ struct MyApp: App {
 ### configure parameters
 
 - `apiKey` (String, required)
-- `isDebug` (Bool, default `false`) — must match the key's environment
-- `endpointBaseUrl` (default `nil`)
 - `logLevel` (`LogLevel`, default `.info`) — use `.debug` in development
+- `customerUserId` (optional) — your stable signed-in-user identifier
+
+`isDebug` and `endpointBaseUrl` still exist on deprecated compatibility overloads
+but are ignored. The API key selects the Appstack environment.
+
+### Customer user ID
+
+Pass the identifier at startup when known, or set it after login and clear it on
+logout. The setter is safe before or after `configure`; make sure an event
+follows a newly set ID so Appstack can form the install-to-user mapping.
+
+```swift
+AppstackAttributionSdk.shared.setCustomerUserId("user-123") // login
+AppstackAttributionSdk.shared.setCustomerUserId(nil)         // logout
+```
 
 ## Sending events
 
@@ -175,12 +181,12 @@ Task {
 
 ## Development environment
 
-Use the **Development** key with `isDebug: true` and `logLevel: .debug`. The flag
-must match the key or events/installs won't route correctly.
+Use the **Development** key with `logLevel: .debug` during development. The API
+key selects the environment; `isDebug` is deprecated and ignored.
 
 ```swift
 AppstackAttributionSdk.shared.configure(
-    apiKey: "your_development_api_key", isDebug: true, logLevel: .debug
+    apiKey: "your_development_api_key", logLevel: .debug
 )
 ```
 
@@ -190,7 +196,7 @@ AppstackAttributionSdk.shared.configure(
   **production** key, the install won't record. Use the development key for
   StoreKit test runs, or disable the StoreKit test config for prod-key validation.
 - **Apple Ads attribution missing:** confirm App Store/TestFlight install, iOS
-  14.3+, `enableAppleAdsAttribution()` called after init in the ATT flow; allow
+  15+, `enableAppleAdsAttribution()` called after configuration; allow
   24–48h. Some behavior is unavailable on the simulator.
 - **Events missing:** confirm `configure` runs before the first `sendEvent`,
   device has network, revenue events include numeric `revenue`/`price` + valid
@@ -201,12 +207,13 @@ AppstackAttributionSdk.shared.configure(
 ## Verification checklist
 
 - [ ] Package added from the correct URL, latest stable version.
-- [ ] Target meets iOS 13.0+ / Xcode 14.0+ / Swift 5.0+.
-- [ ] Prod key + `isDebug: false` (dev key + `isDebug: true` only in dev builds).
+- [ ] Target meets iOS 15.0+ / Xcode 16.0+ / Swift 6-compatible toolchain.
+- [ ] Correct production or development key is selected; `isDebug` is not used
+      as an environment switch.
 - [ ] `configure` runs once at startup before any event.
 - [ ] `INSTALL` never sent manually.
 - [ ] Key flows use standard `EventType`s; custom events few and clean.
 - [ ] Revenue events include `revenue`/`price` + `currency` (+ matching params).
-- [ ] Apple Ads attribution enabled only on iOS 14.3+ in the ATT flow.
+- [ ] Apple Ads attribution enabled only on iOS 15+ after configuration.
 - [ ] Partner IDs/attributes set after `configure`, before first paywall.
 - [ ] Events visible on the Appstack SDK page before launch.

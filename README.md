@@ -6,7 +6,7 @@ reads `SKILL.md` files.
 
 The first skill, `appstack-sdk`, teaches an assistant how to integrate and use the
 **Appstack mobile attribution SDKs** the right way — Swift (iOS), Kotlin (Android),
-React Native, and Flutter. It covers installation, where to initialize on each
+React Native, Flutter, and Unity. It covers installation, where to initialize on each
 platform, the event taxonomy (standard vs. custom events, and why custom events
 should stay few), enhanced app campaigns (revenue + matching parameters), partner
 integrations (Superwall, RevenueCat), what the SDK can and can't do, and
@@ -156,15 +156,16 @@ plugins/appstack/                        # the "appstack" plugin (umbrella; more
     │       ├── swift.md                 # iOS: install, init, examples, partners
     │       ├── kotlin.md                # Android
     │       ├── react-native.md          # React Native
-    │       └── flutter.md               # Flutter
+    │       ├── flutter.md               # Flutter
+    │       └── unity.md                 # Unity
     └── appstack-mcp/                    # the Appstack Analytics MCP usage skill
         └── SKILL.md                     # tool call order, Cube naming conventions
 ```
 
 `appstack-sdk`'s `SKILL.md` holds the platform-agnostic rules (event taxonomy,
 EACs, environments, limitations); each `references/*.md` holds that platform's
-exact install/init code and examples, loaded on demand. Unity SDK is
-intentionally out of scope for now.
+exact install/init code and examples, loaded on demand. Unity includes Project
+Settings auto-initialization and EDM4U/manual Android dependency setup.
 
 `appstack-mcp` is a single `SKILL.md` — no per-platform split needed, since it's
 about how to call the MCP tools well, not about a specific client platform.

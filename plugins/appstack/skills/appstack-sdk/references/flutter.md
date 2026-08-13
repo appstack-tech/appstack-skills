@@ -6,8 +6,8 @@ usage, and partner integrations.
 
 ## Requirements
 
-- iOS 13.0+ (14.3+ for Apple Ads), Xcode 14.0+
-- Android min SDK 21, target 35+
+- iOS 15.0+ (Xcode 16.0+ for the current native framework)
+- Android min SDK 21, target 34+
 - Flutter 3.3.0+, Dart 2.18.0+
 
 ## Install
@@ -60,12 +60,23 @@ void main() async {
 ### configure parameters
 
 - `apiKey` (required, platform-specific)
-- `isDebug` (optional, default `false`) — must match the key's environment
-- `endpointBaseUrl` (optional)
 - `logLevel` (optional int: `0`=DEBUG, `1`=INFO, `2`=WARN, `3`=ERROR; default `1`)
+- `customerUserId` (optional) — your stable signed-in-user identifier
 
 `configure` completes when done and **throws if configuration fails** — wrap in
-try/catch if you need to handle it.
+try/catch if you need to handle it. `isDebug` and `endpointBaseUrl` are retained
+as deprecated compatibility parameters but have no effect; the API key selects
+the Appstack environment.
+
+### Customer user ID
+
+```dart
+await AppstackPlugin.setCustomerUserId('user-123'); // login
+await AppstackPlugin.setCustomerUserId(null);        // logout
+```
+
+The setter is safe before or after `configure`; make sure an event follows a
+newly set ID so Appstack can form the install-to-user mapping.
 
 ## Sending events
 
@@ -153,19 +164,20 @@ final Offerings offerings = await Purchases.setAppstackAttributionParams(params)
 
 ## Development environment
 
-Development key + `isDebug: true` + `logLevel: 0`. The flag must match the key.
+Use the Development key with `logLevel: 0` (DEBUG). The API key selects the
+environment; `isDebug` is deprecated and ignored.
 
 ```dart
 final apiKey = Platform.isIOS
     ? const String.fromEnvironment('APPSTACK_IOS_API_KEY')
     : const String.fromEnvironment('APPSTACK_ANDROID_API_KEY');
-await AppstackPlugin.configure(apiKey, isDebug: true, logLevel: 0);
+await AppstackPlugin.configure(apiKey, logLevel: 0);
 ```
 
 ## Platform notes
 
-- **iOS Apple Ads:** iOS 14.3+, App Store/TestFlight install, 24–48h, consent may
-  be required (14.5+). Guard with `Platform.isIOS`.
+- **iOS Apple Ads:** iOS 15+, App Store/TestFlight install, 24–48h. Guard with
+  `Platform.isIOS`.
 - **Android:** install-referrer collected automatically; attribution quick for
   Play Store installs. `enableAppleAdsAttribution()` returns false on Android.
 
@@ -176,15 +188,15 @@ await AppstackPlugin.configure(apiKey, isDebug: true, logLevel: 0);
   (iOS) `pod install` completed.
 - **Events missing:** `configure` completes before first `sendEvent`; network up;
   revenue events include numeric `revenue`/`price` + valid `currency`.
-- **Android attribution missing:** Play Store install; min 21 / target 35+;
+- **Android attribution missing:** Play Store install; min 21 / target 34+;
   required repositories present in Android Gradle config.
 
 ## Verification checklist
 
 - [ ] `appstack_plugin` from pub.dev; `flutter pub get` + iOS `pod install` done.
-- [ ] Meets Flutter 3.3+, Dart 2.18+, iOS 13+, Android min 21/target 35+.
+- [ ] Meets Flutter 3.3+, Dart 2.18+, iOS 15+, Android min 21/target 34+.
 - [ ] Android repositories (`google()`, `mavenCentral()`, `jitpack.io`) present.
-- [ ] Separate iOS/Android keys; prod keys with `isDebug: false` in prod builds.
+- [ ] Separate iOS/Android keys; correct environment keys per build.
 - [ ] `configure` runs once from `main()` before `runApp`.
 - [ ] iOS-only calls guarded with `Platform.isIOS`.
 - [ ] `EventType.install` never sent manually.
