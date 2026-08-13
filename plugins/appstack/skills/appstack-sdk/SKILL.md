@@ -2,7 +2,7 @@
 name: appstack-sdk
 description: >-
   Best practices for integrating and using the Appstack mobile attribution SDKs
-  (Swift/iOS, Kotlin/Android, React Native, Flutter). Use when installing,
+  (Swift/iOS, Kotlin/Android, React Native, Flutter, Unity). Use when installing,
   configuring, or reviewing an Appstack SDK integration; designing an event
   taxonomy (standard vs. custom events, sendEvent); wiring enhanced app
   campaigns (EACs) with revenue and matching parameters; connecting partner
@@ -34,8 +34,12 @@ real-world `sendEvent` examples, partner-integration wiring, and troubleshooting
 - Android / Kotlin → [references/kotlin.md](references/kotlin.md)
 - React Native → [references/react-native.md](references/react-native.md)
 - Flutter → [references/flutter.md](references/flutter.md)
+- Unity → [references/unity.md](references/unity.md)
 
-(Unity SDK intentionally out of scope for now.)
+The current native releases used by the wrappers are iOS 4.5.0 and Android
+1.7.0; the current wrapper/package lines are Flutter 2.6.0, React Native 2.6.0,
+and Unity 1.2.0. Treat the repositories and registries as the source of truth
+for the exact latest version rather than hard-coding these versions in an app.
 
 Always pin the **latest stable** version from the registry (SPM/GitHub, Maven
 Central, npm, pub.dev) — never assume an old pinned version.
@@ -47,14 +51,19 @@ Central, npm, pub.dev) — never assume an old pinned version.
    `AppDelegate didFinishLaunching` or SwiftUI `@main init`; Android
    `Application.onCreate()`; React Native app-startup `useEffect`; Flutter
    `main()` after `WidgetsFlutterBinding.ensureInitialized()` and before
-   `runApp`.
+   `runApp`; Unity either the Appstack Project Settings auto-initializer or one
+   manual startup call.
 2. **`sendEvent(event, [name], [parameters])`** — report an in-app event. Prefer
    standard `EventType` values; use `CUSTOM` + a name only when nothing fits.
 3. **`getAppstackId()` / `getAttributionParams()`** — read the Appstack user ID
-   and attribution payload to forward to partner integrations. Available only
-   after `configure`.
-4. **`enableAppleAdsAttribution()`** — iOS only; call inside the ATT flow on
-   iOS 14.3+. No-op / returns false on Android.
+   and attribution payload to forward to partner integrations. Call them after
+   `configure` when possible; iOS can mint the ID before configuration, while
+   Android may return `null`/an empty map until initialization or attribution
+   data is ready.
+4. **`enableAppleAdsAttribution()`** — iOS only; call after configuration on
+   iOS 15+. Wrappers guard or no-op this call on Android. It is not an
+   environment switch and should not be used as a substitute for ATT consent
+   handling in the host app.
 
 `INSTALL` is tracked **automatically** on initialization — never send it manually.
 
@@ -158,11 +167,13 @@ offering loads.** Exact per-platform code is in each reference file.
 
 - Appstack issues **separate API keys** per environment (Production /
   Development), under **SDK** in the dashboard for the selected app.
-- The debug flag **must match the key**: development key ⇒ `isDebug: true`;
-  production key ⇒ `isDebug: false`. The flag routes the SDK to the matching
-  environment URL. A mismatch is a common cause of "events/installs not
-  appearing."
-- Ship production builds with the production key and `isDebug: false`.
+- Current native SDKs select the environment from the API key. `isDebug` and
+  `endpointBaseUrl` are deprecated compatibility parameters on older call
+  shapes and are ignored; use `logLevel` for diagnostics. Unity's automatic
+  initializer selects development vs. production keys from its Project
+  Settings environment mode and build type.
+- Ship production builds with the production key and an appropriate non-debug
+  log level.
 
 ## What the SDK can and can't do
 
@@ -182,29 +193,33 @@ offering loads.** Exact per-platform code is in each reference file.
   optimization; keep the standard-event set primary.
 - **Attribution needs an official-store install** — App Store/TestFlight (iOS),
   Play Store (Android). Sideloaded/simulator installs may not attribute.
-- **Apple Ads attribution needs iOS 14.3+**, runs through the ATT flow, and can
-  take **24–48 hours** to appear.
+- **Apple Ads attribution needs iOS 15+** in the current native and wrapper
+  SDKs, and can take **24–48 hours** to appear.
 - **Android attribution** relies on the Play Install Referrer (available quickly
   for Play Store installs).
 - **`INSTALL` is automatic** — never send it manually.
 - Network is required to transmit (events queue offline until connectivity
   returns).
-- React Native today: iOS endpoint override isn't customizable yet, and event
-  name standardization is applied on Android but not yet iOS.
+- The wrappers intentionally keep a small cross-platform surface. Custom
+  endpoint overrides are not a supported app configuration, and attribution
+  parameter readiness differs by platform: iOS waits for its initial match,
+  while Android may return an empty map until data is available.
 
 ## Common mistakes to flag in review
 
-- Configuring the SDK more than once, or after the first `sendEvent`.
+- Configuring the SDK more than once, or relying on a repeat configuration to
+  change keys or options.
 - Sending `INSTALL` manually.
-- Prod/dev key ↔ `isDebug` mismatch.
+- Wrong environment key, or assuming the deprecated `isDebug` flag changes the
+  environment.
 - Dozens of custom events, or custom events duplicating standard ones.
 - Revenue events missing `revenue`/`price` or `currency`.
 - PII or high-cardinality values baked into event names.
 - Hardcoded API keys committed to source control (use env vars / secure config).
 - Calling `enableAppleAdsAttribution()` unconditionally on Android (guard it).
-- Leaving a debug overlay / debug logging on in release builds.
-- Reading `getAppstackId()`/`getAttributionParams()` before `configure`, or
-  handing them to a partner after the paywall/offerings already loaded.
+- Leaving verbose debug logging on in release builds.
+- Reading attribution data before it is ready, or handing it to a partner after
+  the paywall/offerings already loaded.
 
 ## Recommended workflow
 
@@ -212,7 +227,9 @@ New integration:
 
 1. Identify the platform → load the matching reference file.
 2. Install the latest SDK and wire `configure` at the correct startup location.
-3. Set up per-environment keys with matching `isDebug`; keep keys out of source.
+3. Set up per-environment keys; keep keys out of source where the host platform
+   supports secure configuration, and use the platform's current `logLevel`
+   controls for diagnostics.
 4. Design a **small** event set: map real user actions to standard `EventType`s
    first; add at most a handful of clean `CUSTOM` events.
 5. Add `revenue` + `currency` (and matching params where consented) to revenue

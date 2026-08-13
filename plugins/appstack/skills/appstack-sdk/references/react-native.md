@@ -6,8 +6,8 @@ real-world usage, and partner integrations.
 
 ## Requirements
 
-- iOS 13.0+ (14.3+ for Apple Ads), Xcode 14.0+
-- Android min SDK 21, target 35+, Java 17+
+- iOS 15.0+ (Xcode 16.0+ for the Swift 6 framework)
+- Android min SDK 21, target 34+, Java 17+
 - React Native 0.72.0+
 - Node.js 16.0+
 
@@ -40,7 +40,9 @@ const App = () => {
       });
       if (!apiKey) { console.error('Appstack API key not configured'); return; }
 
-      const configured = await AppstackSDK.configure(apiKey);
+      const configured = await AppstackSDK.configure(apiKey, {
+        logLevel: __DEV__ ? 0 : 1,
+      });
       if (!configured) { console.error('SDK configuration failed'); return; }
 
       // Apple Ads attribution — iOS only, guard it
@@ -55,6 +57,20 @@ const App = () => {
 
 Use separate dev and prod keys (e.g. `.env.development` / `.env.production` via
 `react-native-config`).
+
+The preferred options form is `configure(apiKey, { logLevel, customerUserId })`.
+The older positional `isDebug` / `endpointBaseUrl` form remains only for source
+compatibility; both values are deprecated and ignored.
+
+### Customer user ID
+
+```javascript
+await AppstackSDK.setCustomerUserId('user-123'); // login
+await AppstackSDK.setCustomerUserId(null);        // logout
+```
+
+The setter is safe before or after `configure`; make sure an event follows a
+newly set ID so Appstack can form the install-to-user mapping.
 
 ## Sending events
 
@@ -131,28 +147,29 @@ const offerings = await Purchases.setAppstackAttributionParams(params);
 
 ## Platform notes & RN-specific limitations
 
-- **iOS Apple Ads:** iOS 14.3+, App Store/TestFlight install, data in 24–48h,
-  consent may be required (14.5+). Guard `enableAppleAdsAttribution()` with
+- **iOS Apple Ads:** iOS 15+, App Store/TestFlight install, data in 24–48h.
+  Guard `enableAppleAdsAttribution()` with
   `Platform.OS === 'ios'`.
 - **Android:** install-referrer collected automatically; attribution available
   quickly for Play Store installs.
 - **Known RN limitations:** `enableAppleAdsAttribution()` is a no-op on Android;
-  iOS endpoint configuration is not customizable yet (planned); event-name
-  standardization is applied on Android but not yet on iOS.
+  custom endpoint configuration is not a supported wrapper option. iOS
+  attribution parameters include a match-status key after the initial match;
+  Android can return an empty map until data is available.
 
 ## Troubleshooting
 
-- **Configure fails:** check the boolean return value; verify the platform key
-  and network.
+- **Configure fails:** check the boolean return value; verify the platform key,
+  `logLevel` range, and network.
 - **Events missing:** check network, correct per-platform key, allow a few
   minutes. Event names must be uppercase and exact.
-- **iOS attribution missing:** iOS 14.3+, store/TestFlight install, allow 24–48h.
+- **iOS attribution missing:** iOS 15+, store/TestFlight install, allow 24–48h.
 
 ## Verification checklist
 
 - [ ] `react-native-appstack-sdk` installed; `pod install` run for iOS.
-- [ ] Meets RN 0.72+, Node 16+, iOS 13+, Android min 21/target 35+, Java 17+.
-- [ ] Separate iOS/Android keys; prod keys only in prod builds; keys not in source.
+- [ ] Meets RN 0.72+, Node 16+, iOS 15+, Android min 21/target 34+, Java 17+.
+- [ ] Separate iOS/Android keys; correct environment keys per build; keys not in source.
 - [ ] `configure` runs once at startup before any event; return value checked.
 - [ ] iOS-only calls guarded with `Platform.OS === 'ios'`.
 - [ ] `INSTALL` never sent manually; event strings uppercase.

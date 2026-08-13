@@ -9,10 +9,10 @@
     {
       "name": "appstack",
       "source": "./plugins/appstack",
-      "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter).",
+      "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter, Unity).",
       "homepage": "https://docs.appstack.tech",
       "license": "MIT",
-      "keywords": ["appstack", "attribution", "mobile", "sdk", "ios", "android", "react-native", "flutter"]
+      "keywords": ["appstack", "attribution", "mobile", "sdk", "ios", "android", "react-native", "flutter", "unity"]
     }
   ]
 }

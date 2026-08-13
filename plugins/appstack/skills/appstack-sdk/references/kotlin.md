@@ -8,7 +8,7 @@ usage, and partner integrations.
 
 - Min SDK: Android 5.0 (API 21); Target SDK 35+
 - Java 17+
-- Gradle 8.0+ (built with Gradle 8.13 / AGP 8.12)
+- Gradle 8.13 / AGP 8.12 for building the SDK
 - Artifact on [Maven Central](https://central.sonatype.com/artifact/tech.appstack.android-sdk/appstack-android-sdk)
 
 ## Install (Gradle)
@@ -40,13 +40,8 @@ class MyApplication : Application() {
         AppstackAttributionSdk.configure(
             context = this,
             apiKey = "your-android-api-key",
-            isDebug = BuildConfig.DEBUG,   // must match the key's environment
             logLevel = LogLevel.INFO
         )
-
-        if (BuildConfig.DEBUG) {
-            AppstackAttributionSdk.showDebugOverlay(this)   // debug builds only
-        }
     }
 }
 ```
@@ -61,12 +56,24 @@ Register it in `AndroidManifest.xml`:
 
 - `context` (Application context, required)
 - `apiKey` (String, required)
-- `isDebug` (Bool, default `false`) — must match the key's environment
 - `logLevel` (`LogLevel`, default `INFO`)
-- `endpointBaseUrl` (optional, custom endpoint)
+- `listener` (optional `InitListener`) — observe asynchronous initialization
+- `customerUserId` (optional) — your stable signed-in-user identifier
 
-The debug overlay (`showDebugOverlay`) shows SDK status/events and works only when
-`isDebug = true`. Always keep it behind a `BuildConfig.DEBUG` guard.
+`isDebug` and `endpointBaseUrl` remain only as deprecated compatibility overloads
+and are ignored. The API key selects the Appstack environment. Use
+`LogLevel.DEBUG` for diagnostics; the old debug overlay is no longer part of the
+public SDK.
+
+### Customer user ID
+
+```kotlin
+AppstackAttributionSdk.setCustomerUserId("user-123") // login
+AppstackAttributionSdk.setCustomerUserId(null)       // logout
+```
+
+The setter is safe before or after `configure`; make sure an event follows a
+newly set ID so Appstack can form the install-to-user mapping.
 
 ## Sending events
 
@@ -159,35 +166,36 @@ fun syncRevenueCatAttribution() {
 
 ## Development environment
 
-Development key + `isDebug = true` + `logLevel = LogLevel.DEBUG`. The flag must
-match the key.
+Use the Development key with `logLevel = LogLevel.DEBUG`. The API key selects the
+environment; `isDebug` is deprecated and ignored.
 
 ```kotlin
 AppstackAttributionSdk.configure(
     context = this, apiKey = "your_development_api_key",
-    isDebug = true, logLevel = LogLevel.DEBUG
+    logLevel = LogLevel.DEBUG
 )
 ```
 
 ## Android-specific troubleshooting
 
-- **Configuration fails:** confirm the key/environment, `isDebug` matches the
-  key, Maven Central resolves, and the `Application` class is registered in
+- **Configuration fails:** confirm the correct key, Maven Central resolves, and
+  the `Application` class is registered in
   `AndroidManifest.xml`.
 - **Events missing:** `configure` must run in `onCreate` before the first
   `sendEvent`; device has network; test attribution with a **Play Store**
   install; revenue events include numeric `revenue`/`price` + valid `currency`.
-- **Debug overlay missing:** `isDebug = true`, overlay called only in debug
-  builds with a valid context.
+- **Unexpected diagnostics:** use `LogLevel.DEBUG`; there is no public debug
+  overlay in the current SDK.
 
 ## Verification checklist
 
 - [ ] Dependency `tech.appstack.android-sdk:appstack-android-sdk`, latest version.
-- [ ] Min SDK 21, target 35+, Java 17+, Gradle 8.0+; Maven Central available.
+- [ ] Min SDK 21, target 35+, Java 17+, Gradle 8.13 / AGP 8.12 for SDK builds;
+      Maven Central available.
 - [ ] `Application` class registered in `AndroidManifest.xml`.
-- [ ] Prod key + `isDebug = false` (dev key + `isDebug = true` only in dev builds).
+- [ ] Correct production or development key is selected; `isDebug` is not used
+      as an environment switch.
 - [ ] `configure` runs once from `Application.onCreate()` before any event.
-- [ ] Debug overlay guarded by `BuildConfig.DEBUG`.
 - [ ] `INSTALL` never sent manually.
 - [ ] Key flows use standard `EventType`s; custom events few and clean.
 - [ ] Revenue events include `revenue`/`price` + `currency` (+ matching params).
