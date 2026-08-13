@@ -1,7 +1,7 @@
 {
   "name": "appstack",
   "displayName": "Appstack",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Best practices for integrating and using the Appstack mobile attribution SDKs (Swift, Kotlin, React Native, Flutter, Unity), and for using the Appstack Analytics MCP connector efficiently.",
   "author": {
     "name": "Appstack",

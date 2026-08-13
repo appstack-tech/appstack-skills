@@ -1,0 +1,4 @@
+interface:
+  display_name: "Appstack Analytics MCP"
+  short_description: "Query Appstack analytics with safe MCP workflows"
+  default_prompt: "Use $appstack-mcp to query Appstack analytics after discovering scope, metrics, dimensions, and valid filter values."
