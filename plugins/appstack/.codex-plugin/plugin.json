@@ -33,8 +33,7 @@
     "privacyPolicyURL": "https://appstack.tech/privacy",
     "termsOfServiceURL": "https://appstack.tech/terms",
     "defaultPrompt": [
-      "Integrate the Appstack SDK into my app",
-      "Review my Appstack integration",
+      "Integrate or review the Appstack SDK in my app",
       "Debug why my Appstack events are not appearing",
       "Query my Appstack analytics data"
     ],
