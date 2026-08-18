@@ -12,3 +12,6 @@ npm-debug.log*
 
 # Isolated tooling homes (e.g. Codex marketplace validation)
 .context/
+
+# Build output (release-zip.yml)
+*.zip

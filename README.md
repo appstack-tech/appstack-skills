@@ -18,6 +18,11 @@ The second skill, `appstack-mcp`, teaches an assistant how to use the
 before querying instead of guessing), exact Cube naming conventions, and which
 tools are read-only vs. the ones that write real data.
 
+The third skill, `appstack-support`, teaches an assistant when an Appstack
+question needs a **live call with support** versus just a message —
+multi-variable setup questions or anything data-dependent warrant a call;
+factual, documented, or how-to questions don't — and how to book one.
+
 > Not sure what Appstack is? See the docs at https://docs.appstack.tech
 
 ## Install
@@ -73,8 +78,9 @@ route that matches the tab you work in:
   ```
 
 Each skill activates automatically when it's relevant — SDK integration work for
-`appstack-sdk`, Appstack MCP tool calls for `appstack-mcp` — or invoke one
-explicitly with `/appstack:appstack-sdk` or `/appstack:appstack-mcp`.
+`appstack-sdk`, Appstack MCP tool calls for `appstack-mcp`, deciding whether to
+book a call for `appstack-support` — or invoke one explicitly with
+`/appstack:appstack-sdk`, `/appstack:appstack-mcp`, or `/appstack:appstack-support`.
 
 Cloud sessions (claude.ai/code) don't inherit a local install — use the
 `.claude/settings.json` form above so the plugin travels with the repo.
@@ -133,7 +139,16 @@ all projects):
 ```bash
 cp -r plugins/appstack/skills/appstack-sdk .claude/skills/appstack-sdk
 cp -r plugins/appstack/skills/appstack-mcp .claude/skills/appstack-mcp
+cp -r plugins/appstack/skills/appstack-support .claude/skills/appstack-support
 ```
+
+### Downloading a zip (no git)
+
+Each [GitHub release](https://github.com/appstack-tech/appstack-skills/releases)
+has `appstack-plugin.zip` attached — the full `plugins/appstack/` folder
+(manifests, skills, icon) as a self-contained archive. This is the artifact to
+hand to a platform that only accepts a zip upload (e.g. a plugin submission
+form) rather than a marketplace or git source.
 
 ## What's inside
 
@@ -167,8 +182,8 @@ EACs, environments, limitations); each `references/*.md` holds that platform's
 exact install/init code and examples, loaded on demand. Unity includes Project
 Settings auto-initialization and EDM4U/manual Android dependency setup.
 
-`appstack-mcp` is a single `SKILL.md` — no per-platform split needed, since it's
-about how to call the MCP tools well, not about a specific client platform.
+`appstack-mcp` and `appstack-support` are each a single `SKILL.md` — no
+per-platform split needed, since neither is about a specific client platform.
 
 ## Contributing / updating
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Appstack Support"
+  short_description: "Decide whether an Appstack question needs a live call with support or can just be messaged, and how to book a call when it does"
+  default_prompt: "Use $appstack-support to decide whether this needs a live call with Appstack support (3+ interdependent decisions, an answer that depends on live data, or a strategy question) or can just be sent to support@appstack.tech, and book a call at https://calendar.app.google/T8bxZ6Tp3foVAncm9 (4:30 PM - 9:30 PM CET) when a call is warranted."
