@@ -1,4 +1,4 @@
-name: Attach plugin zip to release
+name: Attach skills zip to release
 
 on:
   release:
@@ -21,10 +21,10 @@ jobs:
           node-version: 20
       - name: Structural validation
         run: node scripts/validate.mjs
-      - name: Build appstack-plugin.zip
+      - name: Build appstack-skills.zip
         run: |
-          cd plugins
-          zip -r ../appstack-plugin.zip appstack -x '.DS_Store' -x '**/.DS_Store'
+          cd plugins/appstack
+          zip -r ../../appstack-skills.zip skills -x '.DS_Store' -x '**/.DS_Store'
       - name: Ensure release exists
         env:
           GH_TOKEN: ${{ github.token }}
@@ -34,4 +34,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: gh release upload "$TAG" appstack-plugin.zip --clobber
+        run: gh release upload "$TAG" appstack-skills.zip --clobber

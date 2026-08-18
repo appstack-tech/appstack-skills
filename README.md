@@ -145,10 +145,12 @@ cp -r plugins/appstack/skills/appstack-support .claude/skills/appstack-support
 ### Downloading a zip (no git)
 
 Each [GitHub release](https://github.com/appstack-tech/appstack-skills/releases)
-has `appstack-plugin.zip` attached — the full `plugins/appstack/` folder
-(manifests, skills, icon) as a self-contained archive. This is the artifact to
-hand to a platform that only accepts a zip upload (e.g. a plugin submission
-form) rather than a marketplace or git source.
+has `appstack-skills.zip` attached — a directory of skill roots (`appstack-sdk/`,
+`appstack-mcp/`, `appstack-support/`, each with its own `SKILL.md` at the top),
+with the plugin manifests and icon left out since those only matter to the
+git-based marketplaces. This is the artifact for a platform that takes a raw
+skill zip upload (e.g. OpenAI's), which expects exactly one skill root or one
+directory of skill roots at the top level.
 
 ## What's inside
 
