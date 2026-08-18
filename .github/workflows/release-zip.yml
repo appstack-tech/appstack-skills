@@ -25,6 +25,11 @@ jobs:
         run: |
           cd plugins
           zip -r ../appstack-plugin.zip appstack -x '.DS_Store' -x '**/.DS_Store'
+      - name: Ensure release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release view "$TAG" || gh release create "$TAG" --title "$TAG" --generate-notes
       - name: Upload to release
         env:
           GH_TOKEN: ${{ github.token }}
