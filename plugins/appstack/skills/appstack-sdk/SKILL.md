@@ -36,34 +36,66 @@ real-world `sendEvent` examples, partner-integration wiring, and troubleshooting
 - Flutter → [references/flutter.md](references/flutter.md)
 - Unity → [references/unity.md](references/unity.md)
 
-The current native releases used by the wrappers are iOS 4.5.0 and Android
-1.7.0; the current wrapper/package lines are Flutter 2.6.0, React Native 2.6.0,
-and Unity 1.2.0. Treat the repositories and registries as the source of truth
-for the exact latest version rather than hard-coding these versions in an app.
+**React Native 3.0.0 is a breaking major.** When reviewing an existing RN app,
+check the installed major *before* reading or writing any Appstack call — the
+2.x and 3.x call shapes are mutually incompatible. See
+[references/react-native.md](references/react-native.md).
 
 Always pin the **latest stable** version from the registry (SPM/GitHub, Maven
 Central, npm, pub.dev) — never assume an old pinned version.
 
-## The core API (same shape on every platform)
+## The core API — same four calls, **different signatures per platform**
+
+Every platform exposes the same four operations, and the *concepts* below hold
+everywhere. The **call shapes do not** — return types, failure signals, and
+argument lists differ per platform, sometimes substantially.
+
+**Never write a call from the concept alone. Open the platform reference file
+and copy its signature.** The table below is a map of where the differences are,
+not a substitute for that file.
 
 1. **`configure(apiKey, ...)`** — call **once**, as early as possible in app
-   startup, **before any other SDK call**. Init location per platform: iOS
-   `AppDelegate didFinishLaunching` or SwiftUI `@main init`; Android
+   startup, **before any other SDK call**. A repeat call is a no-op everywhere:
+   it cannot change the key, log level, or user ID. Init location per platform:
+   iOS `AppDelegate didFinishLaunching` or SwiftUI `@main init`; Android
    `Application.onCreate()`; React Native app-startup `useEffect`; Flutter
    `main()` after `WidgetsFlutterBinding.ensureInitialized()` and before
    `runApp`; Unity either the Appstack Project Settings auto-initializer or one
    manual startup call.
-2. **`sendEvent(event, [name], [parameters])`** — report an in-app event. Prefer
-   standard `EventType` values; use `CUSTOM` + a name only when nothing fits.
+2. **`sendEvent(...)`** — report an in-app event. Prefer standard `EventType`
+   values. Four platforms take a separate name argument for custom events;
+   React Native 3.x does not (see below).
 3. **`getAppstackId()` / `getAttributionParams()`** — read the Appstack user ID
    and attribution payload to forward to partner integrations. Call them after
-   `configure` when possible; iOS can mint the ID before configuration, while
-   Android may return `null`/an empty map until initialization or attribution
-   data is ready.
+   `configure` when possible. This pair has the **widest divergence** of the
+   four, and it is what the Superwall/RevenueCat flows depend on — getting the
+   call style wrong here produces broken paywall wiring.
 4. **`enableAppleAdsAttribution()`** — iOS only; call after configuration on
    iOS 15+. Wrappers guard or no-op this call on Android. It is not an
    environment switch and should not be used as a substitute for ATT consent
    handling in the host app.
+
+### Where the platforms actually differ
+
+| | Swift | Kotlin | Flutter | Unity | React Native 3.x |
+| --- | --- | --- | --- | --- | --- |
+| `sendEvent` shape | `(event, name?, parameters?)` | `(event, name?, parameters?)` | `(EventType, {eventName, parameters})` | `(EventType, eventName, parameters)` | **`(event, parameters?)`** — no name arg |
+| `sendEvent` returns | Void | Unit | **`Future<bool>`** | void | `Promise<void>` |
+| custom event via | `.CUSTOM` + name | `EventType.CUSTOM` + name | `EventType.custom` + `eventName` | `EventType.CUSTOM` + `eventName` | **pass the name directly**; no `CUSTOM` |
+| `configure` failure signal | *silent* | `InitListener` callback | **throws** | void + pre-build validation | **returns `false`** |
+| `getAttributionParams` | `async` → `[String: Any]?` | **synchronous** → `Map<String, String>` | `Future` | **callback-based** | `Promise` |
+| `getAppstackId` | sync | sync | `Future` | sync | `Promise` |
+| clear customer user ID | pass `nil` | pass `null` | pass `null` | **`ClearCustomerUserId()`** | pass `null` |
+
+Two consequences worth internalizing:
+
+- **`configure` reports failure four different ways.** If you are not reading
+  the platform's signal — boolean, throw, listener, or nothing at all — you have
+  no idea whether the SDK came up.
+- **Attribution-parameter readiness also differs**, independently of call style:
+  iOS waits for its initial match and always returns an `appstack_match_status`
+  key; Android does not report that key and may return an empty map until data
+  arrives. Check for the key rather than assuming both platforms provide it.
 
 `INSTALL` is tracked **automatically** on initialization — never send it manually.
 
@@ -71,7 +103,7 @@ Central, npm, pub.dev) — never assume an old pinned version.
 
 This is where most integrations go wrong.
 
-### Prefer standard events; use CUSTOM sparingly
+### Prefer standard events; use custom events sparingly
 
 The SDK ships a fixed set of standard `EventType` values that ad networks map to
 their own optimization events. Always reach for a standard event first:
@@ -82,11 +114,19 @@ their own optimization events. Always reach for a standard event first:
 - **Games/progression:** `LEVEL_START`, `LEVEL_COMPLETE`
 - **Engagement:** `TUTORIAL_COMPLETE`, `SEARCH`, `VIEW_ITEM`, `VIEW_CONTENT`,
   `SHARE`
-- **Catch-all:** `CUSTOM`
+- **Catch-all:** a custom event (see below — how you send one is
+  platform-specific)
 
 (Casing differs by platform — `.PURCHASE` on Swift, `EventType.PURCHASE` on
-Kotlin, `'PURCHASE'` strings on React Native, `EventType.purchase` on Flutter.
-See the platform file.)
+Kotlin, `EventType.PURCHASE` or `'PURCHASE'` on React Native,
+`EventType.purchase` on Flutter, `EventType.PURCHASE` on Unity. See the platform
+file.)
+
+**Sending a custom event differs structurally, not just cosmetically.** On
+Swift, Kotlin, Flutter, and Unity you pass the `CUSTOM` event type *plus* a
+separate name. On React Native 3.x there is no `CUSTOM` value at all — you pass
+your custom name as the event itself, and passing the literal `'CUSTOM'` is
+rejected at runtime.
 
 ### Keep custom events under ~10 — more usually means misuse
 
@@ -110,7 +150,7 @@ When you review an integration and see many custom events, treat it as a finding
 
 1. Map each custom event to a standard `EventType` where one exists and migrate.
 2. Collapse near-duplicates (`buy`, `bought`, `purchase_done` → `PURCHASE`).
-3. Keep only genuinely app-specific signals as `CUSTOM`, with descriptive,
+3. Keep only genuinely app-specific signals as custom events, with descriptive,
    consistent, `snake_case` names (`user_attributes`, `wallet_connected`).
 4. If they truly need broad in-app analytics, that belongs in a product-analytics
    tool, not the attribution SDK.
@@ -120,6 +160,27 @@ When you review an integration and see many custom events, treat it as a finding
 Event **names** are identifiers, not payloads. Personal data, IDs, prices, or
 per-item values go in **parameters**, never the name. `purchase_john@x.com` and
 `level_47_complete` are both wrong.
+
+### Event parameter values must be JSON-representable
+
+Parameters are serialized to JSON on the way out. Every value must be a string,
+number, boolean, or a nested array/object of those. A `Date`, `URL`, `Data`,
+`Set`, class instance, or **non-finite number (`NaN`, `Infinity`)** is not
+representable, and the consequences range from the key being silently dropped to
+**the host app crashing** depending on platform and SDK version. Convert before
+sending: dates to `YYYY-MM-DD` or an epoch number, everything else to a string
+or number.
+
+The realistic trigger is arithmetic, not exotic types. All three of these are
+bugs:
+
+- `revenue: price * quantity` where either operand is undefined → `NaN`
+- `revenue: total / count` where `count` is `0` → `Infinity`
+- `signup_date: <a native date object>` → not representable
+
+`NaN` is the dangerous one because it is *typed* as a number, so no compiler and
+no type annotation will catch it. Validate computed revenue before attaching it,
+and omit the key rather than sending a non-finite value.
 
 ## Revenue & enhanced app campaigns (EACs)
 
@@ -214,6 +275,8 @@ offering loads.** Exact per-platform code is in each reference file.
   environment.
 - Dozens of custom events, or custom events duplicating standard ones.
 - Revenue events missing `revenue`/`price` or `currency`.
+- Computed revenue attached without a finite-number check (`price * quantity`,
+  `total / count`), or a date/object passed as a parameter value.
 - PII or high-cardinality values baked into event names.
 - Hardcoded API keys committed to source control (use env vars / secure config).
 - Calling `enableAppleAdsAttribution()` unconditionally on Android (guard it).
@@ -231,7 +294,7 @@ New integration:
    supports secure configuration, and use the platform's current `logLevel`
    controls for diagnostics.
 4. Design a **small** event set: map real user actions to standard `EventType`s
-   first; add at most a handful of clean `CUSTOM` events.
+   first; add at most a handful of clean custom events.
 5. Add `revenue` + `currency` (and matching params where consented) to revenue
    events.
 6. On iOS, enable Apple Ads attribution in the ATT flow.
