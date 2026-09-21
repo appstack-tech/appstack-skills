@@ -19,9 +19,12 @@ Unity package. The package does not install EDM4U automatically.
 
 - iOS: the package resolves the `AppstackSDK` Swift package during the Unity
   build; set the iOS minimum deployment target to 15.0+.
-- Android: install EDM4U and resolve dependencies, or add
-  `tech.appstack.android-sdk:appstack-android-sdk:1.7.0` to the generated
-  `unityLibrary` Gradle project with Maven Central available.
+- Android: install EDM4U and resolve dependencies, or add the
+  `tech.appstack.android-sdk:appstack-android-sdk` coordinate declared in the
+  package's `Editor/AppstackDependencies.xml` to the generated `unityLibrary`
+  Gradle project with Maven Central available. Use the version pinned there —
+  it is matched to the installed Unity package, not simply the newest on Maven
+  Central.
 - No manual R8/ProGuard rules are required.
 
 ## Initialize
@@ -82,6 +85,27 @@ AppstackSDK.SendEvent(
     parameters: new Dictionary<string, object> { { "chain", "ethereum" } });
 ```
 
+### Matching parameters
+
+Send `email`, `name`, `phone_number`, `date_of_birth` and `gender` on a
+`user_attributes` custom event **once per user, right after sign-up or login**,
+with whichever fields the app has. Appstack stores them against the install, so
+do not re-send them per session or on revenue events. See `SKILL.md` for the full
+field list and encryption behaviour.
+
+```csharp
+AppstackSDK.SendEvent(
+    EventType.CUSTOM,
+    eventName: "user_attributes",
+    parameters: new Dictionary<string, object>
+    {
+        { "email", user.Email },
+        { "name", $"{user.FirstName} {user.LastName}" },
+        { "phone_number", user.Phone },
+        { "date_of_birth", user.Dob }   // "YYYY-MM-DD"
+    });
+```
+
 Call Apple Ads attribution only on an iOS device build, after configuration:
 
 ```csharp
@@ -112,8 +136,8 @@ device or store build.
 
 - [ ] Unity 6+, iOS 15+, Android API 21+/target 34+, Java 17+.
 - [ ] iOS minimum deployment target is 15.0+.
-- [ ] EDM4U resolved, or the Android 1.7.0 dependency is present in
-      `unityLibrary`.
+- [ ] EDM4U resolved, or the `appstack-android-sdk` version declared in
+      `Editor/AppstackDependencies.xml` is present in `unityLibrary`.
 - [ ] Auto-initialization settings or one manual `Configure` call is used, not
       both.
 - [ ] Platform-specific environment keys are configured without relying on
@@ -121,3 +145,5 @@ device or store build.
 - [ ] Apple Ads is enabled only on iOS device builds.
 - [ ] `INSTALL` is never sent manually; revenue events include revenue/price and
       currency; custom events remain few and descriptive.
+- [ ] Matching params sent on a `user_attributes` event once per user, not per
+      session and not on revenue events.

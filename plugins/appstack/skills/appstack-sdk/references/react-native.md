@@ -176,14 +176,18 @@ is not valid JSON. Send a checked number or omit the key — see
 await AppstackSDK.sendEvent(EventType.SIGN_UP);
 await AppstackSDK.sendEvent(EventType.LOGIN);
 
-// Purchase with revenue + (consented) matching params for EAC/Meta
-await AppstackSDK.sendEvent(EventType.PURCHASE, {
-  revenue: 29.99,
-  currency: 'USD',
+// Matching params for EAC/Meta — once per user, right after sign-up/login
+await AppstackSDK.sendEvent('user_attributes', {
   email: user.email,
   name: `${user.firstName} ${user.lastName}`,
   phone_number: user.phone,
   date_of_birth: user.dob,   // 'YYYY-MM-DD'
+});
+
+// Purchase — revenue + currency only; the attributes above already apply
+await AppstackSDK.sendEvent(EventType.PURCHASE, {
+  revenue: 29.99,
+  currency: 'USD',
 });
 
 // Subscription / trial
@@ -285,7 +289,9 @@ const offerings = await Purchases.setAppstackAttributionParams(params);
 - [ ] iOS-only calls guarded with `Platform.OS === 'ios'`.
 - [ ] `INSTALL` never sent manually.
 - [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency` (+ matching params),
-      and computed revenue values are guarded against `NaN`.
+- [ ] Revenue events include `revenue`/`price` + `currency`, and computed
+      revenue values are guarded against `NaN`.
+- [ ] Matching params sent on a `user_attributes` event once per user, not per
+      session and not on revenue events.
 - [ ] `expo-superwall` used for Superwall; partner attrs set after `configure`.
 - [ ] Events visible on the Appstack SDK page before launch.

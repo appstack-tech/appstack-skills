@@ -101,16 +101,24 @@ Events use the `EventType` enum (uppercase cases). `parameters` is
 AppstackAttributionSdk.shared.sendEvent(event: .SIGN_UP)
 AppstackAttributionSdk.shared.sendEvent(event: .LOGIN)
 
-// Purchase with revenue + (consented) matching params for EAC/Meta
+// Matching params for EAC/Meta — once per user, right after sign-up/login
 AppstackAttributionSdk.shared.sendEvent(
-    event: .PURCHASE,
+    event: .CUSTOM,
+    name: "user_attributes",
     parameters: [
-        "revenue": 29.99,
-        "currency": "USD",
         "email": user.email,
         "name": "\(user.firstName) \(user.lastName)",
         "phone_number": user.phone,
         "date_of_birth": user.dob   // "YYYY-MM-DD"
+    ]
+)
+
+// Purchase — revenue + currency only; the attributes above already apply
+AppstackAttributionSdk.shared.sendEvent(
+    event: .PURCHASE,
+    parameters: [
+        "revenue": 29.99,
+        "currency": "USD"
     ]
 )
 
@@ -213,7 +221,9 @@ AppstackAttributionSdk.shared.configure(
 - [ ] `configure` runs once at startup before any event.
 - [ ] `INSTALL` never sent manually.
 - [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency` (+ matching params).
+- [ ] Revenue events include `revenue`/`price` + `currency`.
+- [ ] Matching params sent on a `user_attributes` event once per user, not per
+      session and not on revenue events.
 - [ ] Apple Ads attribution enabled only on iOS 15+ after configuration.
 - [ ] Partner IDs/attributes set after `configure`, before first paywall.
 - [ ] Events visible on the Appstack SDK page before launch.
