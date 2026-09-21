@@ -190,6 +190,25 @@ For any event representing revenue (`PURCHASE`, `SUBSCRIBE`, `START_TRIAL`, …)
   string (`"USD"`, `"EUR"`). Revenue ranges are configured in the Appstack
   platform and synchronized automatically.
 
+### Subscription platforms outrank SDK revenue
+
+If the app uses a subscription platform (**RevenueCat**, **Superwall**), Appstack
+treats *that platform's* purchase, subscription, trial, and renewal data as the
+source of truth and prefers it over the equivalent SDK events. Sending the SDK
+events as well is harmless — precedence is resolved on Appstack's side — but it
+changes what matters in an integration:
+
+- **Wiring the partner integration is the higher-leverage work.** If attribution
+  params never reach RevenueCat/Superwall, their revenue events arrive without
+  campaign context, and the data Appstack prioritizes is the *un*attributed data.
+- **Renewals only exist on the platform side.** There is no standard renewal
+  `EventType`, so an app without a connected subscription platform reports first
+  purchases only.
+- **A gap between SDK-sent revenue and dashboard revenue is not a bug.** The
+  dashboard is expected to follow the subscription platform.
+
+### Matching parameters
+
 To improve match quality on Meta and TikTok, include these **matching
 parameters** when the app has consent. Appstack **encrypts them automatically**
 before matching:
@@ -200,8 +219,14 @@ before matching:
 - `date_of_birth` — `YYYY-MM-DD` (also `birthdate` / `birthday` / `dateOfBirth`)
 - `gender`
 
-These are the single biggest lever on EAC performance — send them on revenue
-events wherever consent allows.
+These are the single biggest lever on EAC performance. Send them on a dedicated
+**`user_attributes` custom event, once per user, right after sign-up or login** —
+with whichever fields the app has. Appstack stores them against the install and
+applies them to every event that follows, so do not re-send them per session or
+on revenue events; send again only if a value changes.
+
+Because it is its own event, it keeps working when revenue lives in
+RevenueCat/Superwall and the app never sends revenue events itself.
 
 ## Partner integrations (Superwall, RevenueCat)
 
@@ -210,6 +235,12 @@ subscription analytics can be attribution-aware. The general pattern is always:
 **configure Appstack → configure the partner → read `getAppstackId()` /
 `getAttributionParams()` → hand them to the partner before the first paywall /
 offering loads.** Exact per-platform code is in each reference file.
+
+This wiring is what makes the partner's revenue attributable. Because Appstack
+prioritizes the subscription platform's purchase and renewal data over the SDK's
+own revenue events, an unwired partner leaves the *priority* revenue data with no
+campaign context. For any app with a paywall, treat it as required work rather
+than an optional enhancement.
 
 - **Superwall** — set the Appstack ID via `setIntegrationAttributes`, and pass
   `getAttributionParams()` as Superwall **user attributes** before the first
@@ -274,7 +305,12 @@ offering loads.** Exact per-platform code is in each reference file.
 - Wrong environment key, or assuming the deprecated `isDebug` flag changes the
   environment.
 - Dozens of custom events, or custom events duplicating standard ones.
-- Revenue events missing `revenue`/`price` or `currency`.
+- Revenue events missing `revenue`/`price` or `currency` — a real finding when no
+  subscription platform is connected, low-severity when one is.
+- RevenueCat/Superwall installed but Appstack attribution params never wired into
+  it, leaving the revenue data Appstack prioritizes without campaign context.
+- Matching parameters re-sent per session or on every revenue event instead of
+  once per user — redundant, and spreads PII across events.
 - Computed revenue attached without a finite-number check (`price * quantity`,
   `total / count`), or a date/object passed as a parameter value.
 - PII or high-cardinality values baked into event names.
@@ -295,8 +331,10 @@ New integration:
    controls for diagnostics.
 4. Design a **small** event set: map real user actions to standard `EventType`s
    first; add at most a handful of clean custom events.
-5. Add `revenue` + `currency` (and matching params where consented) to revenue
-   events.
+5. Add `revenue` + `currency` to revenue events. Send matching params on a
+   `user_attributes` custom event once per user, right after sign-up/login. If
+   the app uses RevenueCat/Superwall, prioritize wiring that integration — its
+   revenue data outranks the SDK's.
 6. On iOS, enable Apple Ads attribution in the ATT flow.
 7. Wire partner integrations after Appstack config, before the first paywall.
 8. Verify events appear on the Appstack **SDK** page before enabling downstream

@@ -97,16 +97,24 @@ it.)
 await AppstackPlugin.sendEvent(EventType.signUp);
 await AppstackPlugin.sendEvent(EventType.login);
 
-// Purchase with revenue + (consented) matching params for EAC/Meta
+// Matching params for EAC/Meta — once per user, right after sign-up/login
+await AppstackPlugin.sendEvent(
+  EventType.custom,
+  eventName: 'user_attributes',
+  parameters: {
+    'email': user.email,
+    'name': '${user.firstName} ${user.lastName}',
+    'phone_number': user.phone,
+    'date_of_birth': user.dob,   // 'YYYY-MM-DD'
+  },
+);
+
+// Purchase — revenue + currency only; the attributes above already apply
 await AppstackPlugin.sendEvent(
   EventType.purchase,
   parameters: {
     'revenue': 29.99,
     'currency': 'USD',
-    'email': user.email,
-    'name': '${user.firstName} ${user.lastName}',
-    'phone_number': user.phone,
-    'date_of_birth': user.dob,   // 'YYYY-MM-DD'
   },
 );
 
@@ -201,6 +209,8 @@ await AppstackPlugin.configure(apiKey, logLevel: 0);
 - [ ] iOS-only calls guarded with `Platform.isIOS`.
 - [ ] `EventType.install` never sent manually.
 - [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency` (+ matching params).
+- [ ] Revenue events include `revenue`/`price` + `currency`.
+- [ ] Matching params sent on a `user_attributes` event once per user, not per
+      session and not on revenue events.
 - [ ] Partner IDs/attributes set after `configure`, before first paywall.
 - [ ] Events visible on the Appstack SDK page before launch.
