@@ -4,6 +4,9 @@ Read `SKILL.md` first for the cross-cutting rules (event taxonomy, EACs,
 environments, limitations). This file covers Unity 6 setup, native dependency
 resolution, initialization, and the callback-based attribution API.
 
+Unity has no official Appstack integration with Superwall or RevenueCat. Do not
+apply the partner wiring examples from the other platform references to Unity.
+
 ## Requirements
 
 - Unity 6 (`6000.0`)+

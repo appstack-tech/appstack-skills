@@ -15,12 +15,12 @@ usage, and partner integrations.
 
 ```kotlin
 dependencies {
-    // Resolve the latest from Maven Central, then pin an explicit version for release builds.
-    implementation("tech.appstack.android-sdk:appstack-android-sdk:+")
+    // Replace VERSION with the latest stable version from Maven Central.
+    implementation("tech.appstack.android-sdk:appstack-android-sdk:VERSION")
 }
 ```
 
-Prefer a specific version (not `+`) for reproducible release builds. No extra
+Use the resolved exact version rather than `+`. No extra
 Gradle config is required, but the `Application` class must be registered in
 `AndroidManifest.xml`.
 
@@ -145,11 +145,11 @@ Superwall.instance.setIntegrationAttributes(
     mapOf(IntegrationAttribute.appstackId to AppstackAttributionSdk.getAppstackId())
 )
 
-fun prepareSuperwallPlacement() {
-    Superwall.instance.setUserAttributes(AppstackAttributionSdk.getAttributionParams())
+suspend fun prepareSuperwallPlacement() {
+    Superwall.instance.setUserAttributes(AppstackAttributionSdk.awaitAttributionParams())
     Superwall.instance.register("onboarding_paywall")
 }
-// Call after Appstack init and before this placement can be shown.
+// Call from a coroutine after Appstack init and before this placement can be shown.
 ```
 
 ### RevenueCat (purchases-android ≥ 9.23.0)
@@ -157,8 +157,8 @@ fun prepareSuperwallPlacement() {
 ```kotlin
 Purchases.configure(this, "public_sdk_key")
 
-fun syncRevenueCatAttribution() {
-    val params = AppstackAttributionSdk.getAttributionParams().toMutableMap()
+suspend fun syncRevenueCatAttribution() {
+    val params = AppstackAttributionSdk.awaitAttributionParams().toMutableMap()
     AppstackAttributionSdk.getAppstackId()?.let { params["appstack_id"] = it }
 
     Purchases.sharedInstance.setAppstackAttributionParams(
@@ -169,7 +169,7 @@ fun syncRevenueCatAttribution() {
         }
     )
 }
-// Call after Appstack init and before loading offerings/paywalls.
+// Call from a coroutine after Appstack init and before loading offerings/paywalls.
 ```
 
 ## Development environment

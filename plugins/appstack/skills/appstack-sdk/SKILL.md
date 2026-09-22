@@ -27,8 +27,8 @@ over-instrumenting it actively *degrades* attribution quality.
 
 Core concepts are identical across platforms; only install, initialization
 location, and method signatures differ. Load the file for the platform in play —
-each contains full, ready-to-paste code including **where to initialize**,
-real-world `sendEvent` examples, partner-integration wiring, and troubleshooting:
+each covers initialization, `sendEvent`, and troubleshooting. The Swift, Kotlin,
+React Native, and Flutter files also cover official partner-integration wiring:
 
 - iOS / Swift → [references/swift.md](references/swift.md)
 - Android / Kotlin → [references/kotlin.md](references/kotlin.md)
@@ -41,8 +41,9 @@ check the installed major *before* reading or writing any Appstack call — the
 2.x and 3.x call shapes are mutually incompatible. See
 [references/react-native.md](references/react-native.md).
 
-Always pin the **latest stable** version from the registry (SPM/GitHub, Maven
-Central, npm, pub.dev) — never assume an old pinned version.
+For new installs, look up the latest stable version in the platform registry
+(SPM/GitHub, Maven Central, npm, pub.dev) and select that exact version. Do not
+use dynamic versions such as Gradle `+` in the app.
 
 ## The core API — same four calls, **different signatures per platform**
 
@@ -55,7 +56,8 @@ and copy its signature.** The table below is a map of where the differences are,
 not a substitute for that file.
 
 1. **`configure(apiKey, ...)`** — call **once**, as early as possible in app
-   startup, **before any other SDK call**. A repeat call is a no-op everywhere:
+   startup, before sending events or reading attribution. The customer user ID
+   setter is safe before configuration. A repeat call is a no-op everywhere:
    it cannot change the key, log level, or user ID. Init location per platform:
    iOS `AppDelegate didFinishLaunching` or SwiftUI `@main init`; Android
    `Application.onCreate()`; React Native app-startup `useEffect`; Flutter
@@ -93,9 +95,10 @@ Two consequences worth internalizing:
   the platform's signal — boolean, throw, listener, or nothing at all — you have
   no idea whether the SDK came up.
 - **Attribution-parameter readiness also differs**, independently of call style:
-  iOS waits for its initial match and always returns an `appstack_match_status`
-  key; Android does not report that key and may return an empty map until data
-  arrives. Check for the key rather than assuming both platforms provide it.
+  iOS waits for its initial match. Native Android's synchronous
+  `getAttributionParams()` may return an empty map while matching is in progress;
+  use its suspending `awaitAttributionParams()` when handing data to a partner
+  soon after configuration. Do not require `appstack_match_status` on Android.
 
 `INSTALL` is tracked **automatically** on initialization — never send it manually.
 
@@ -210,7 +213,7 @@ changes what matters in an integration:
 ### Matching parameters
 
 To improve match quality on Meta and TikTok, include these **matching
-parameters** when the app has consent. Appstack **encrypts them automatically**
+parameters** when they are available. Appstack **encrypts them automatically**
 before matching:
 
 - `email`
@@ -233,14 +236,15 @@ RevenueCat/Superwall and the app never sends revenue events itself.
 Partners consume the Appstack ID and/or attribution params so paywalls and
 subscription analytics can be attribution-aware. The general pattern is always:
 **configure Appstack → configure the partner → read `getAppstackId()` /
-`getAttributionParams()` → hand them to the partner before the first paywall /
-offering loads.** Exact per-platform code is in each reference file.
+`getAttributionParams()` (native Android: `awaitAttributionParams()`) → hand them to the partner before the first paywall /
+offering loads.** Exact code is in the supported platform references. Unity has
+no official partner integration.
 
 This wiring is what makes the partner's revenue attributable. Because Appstack
 prioritizes the subscription platform's purchase and renewal data over the SDK's
 own revenue events, an unwired partner leaves the *priority* revenue data with no
-campaign context. For any app with a paywall, treat it as required work rather
-than an optional enhancement.
+campaign context. Where an official integration exists, treat this as required
+work for an app with a paywall.
 
 - **Superwall** — set the Appstack ID via `setIntegrationAttributes`, and pass
   `getAttributionParams()` as Superwall **user attributes** before the first
@@ -335,8 +339,11 @@ New integration:
    `user_attributes` custom event once per user, right after sign-up/login. If
    the app uses RevenueCat/Superwall, prioritize wiring that integration — its
    revenue data outranks the SDK's.
-6. On iOS, enable Apple Ads attribution in the ATT flow.
-7. Wire partner integrations after Appstack config, before the first paywall.
+6. On iOS 15+, enable Apple Ads attribution after configuration. If the host app
+   requests ATT permission, call it after the ATT completion callback so an
+   authorized IDFA can be captured.
+7. Where supported, wire partner integrations after Appstack config, before the
+   first paywall.
 8. Verify events appear on the Appstack **SDK** page before enabling downstream
    integrations.
 

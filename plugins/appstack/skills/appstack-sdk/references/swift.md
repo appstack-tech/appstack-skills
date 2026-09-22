@@ -43,7 +43,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             logLevel: .info
         )
 
-        // Call after configure when Apple Ads attribution is needed (iOS 15+).
+        // If the app requests ATT permission, call this after its completion
+        // callback instead so an authorized IDFA can be captured.
         AppstackASAAttribution.shared.enableAppleAdsAttribution()
         return true
     }
