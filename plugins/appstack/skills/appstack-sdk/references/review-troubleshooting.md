@@ -35,8 +35,7 @@ check relevant causes, not to report features the app does not use.
 ## Integration review
 
 - Confirm API keys are selected for the correct environment and are not
-  committed directly to source. Release builds should not use verbose debug
-  logging.
+  committed directly to source.
 - For apps with a supported RevenueCat or Superwall integration, check that
   Appstack ID and attribution parameters reach the partner before offerings or
   placements load. See [partner integrations](partner-integrations.md).
