@@ -1,8 +1,7 @@
 # Appstack Android SDK (Kotlin)
 
-Read `SKILL.md` first for the cross-cutting rules (event taxonomy, EACs,
-environments, limitations). This file covers Android-specific setup, real-world
-usage, and partner integrations.
+Read [SKILL.md](../SKILL.md) for task routing and version checks. This file
+covers Android setup, call shapes, and supported partner wiring.
 
 ## Requirements
 
@@ -197,17 +196,8 @@ AppstackAttributionSdk.configure(
 
 ## Verification checklist
 
-- [ ] Dependency `tech.appstack.android-sdk:appstack-android-sdk`, latest version.
+- [ ] Dependency `tech.appstack.android-sdk:appstack-android-sdk` and resolved version confirmed.
 - [ ] Min SDK 21, target 35+, Java 17+, Gradle 8.13 / AGP 8.12 for SDK builds;
       Maven Central available.
 - [ ] `Application` class registered in `AndroidManifest.xml`.
-- [ ] Correct production or development key is selected; `isDebug` is not used
-      as an environment switch.
 - [ ] `configure` runs once from `Application.onCreate()` before any event.
-- [ ] `INSTALL` never sent manually.
-- [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency`.
-- [ ] Matching params sent on a `user_attributes` event once per user, not per
-      session and not on revenue events.
-- [ ] Partner IDs/attributes set after `configure`, before first paywall.
-- [ ] Events visible on the Appstack SDK page before launch.

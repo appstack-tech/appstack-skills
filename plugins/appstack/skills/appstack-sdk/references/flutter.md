@@ -1,8 +1,7 @@
 # Appstack Flutter plugin
 
-Read `SKILL.md` first for the cross-cutting rules (event taxonomy, EACs,
-environments, limitations). This file covers Flutter-specific setup, real-world
-usage, and partner integrations.
+Read [SKILL.md](../SKILL.md) for task routing and version checks. This file
+covers Flutter setup, call shapes, and supported partner wiring.
 
 ## Requirements
 
@@ -204,13 +203,5 @@ await AppstackPlugin.configure(apiKey, logLevel: 0);
 - [ ] `appstack_plugin` from pub.dev; `flutter pub get` + iOS `pod install` done.
 - [ ] Meets Flutter 3.3+, Dart 2.18+, iOS 15+, Android min 21/target 34+.
 - [ ] Android repositories (`google()`, `mavenCentral()`, `jitpack.io`) present.
-- [ ] Separate iOS/Android keys; correct environment keys per build.
 - [ ] `configure` runs once from `main()` before `runApp`.
 - [ ] iOS-only calls guarded with `Platform.isIOS`.
-- [ ] `EventType.install` never sent manually.
-- [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency`.
-- [ ] Matching params sent on a `user_attributes` event once per user, not per
-      session and not on revenue events.
-- [ ] Partner IDs/attributes set after `configure`, before first paywall.
-- [ ] Events visible on the Appstack SDK page before launch.
