@@ -1,8 +1,8 @@
 # Appstack Unity SDK
 
-Read `SKILL.md` first for the cross-cutting rules (event taxonomy, EACs,
-environments, limitations). This file covers Unity 6 setup, native dependency
-resolution, initialization, and the callback-based attribution API.
+Read [SKILL.md](../SKILL.md) for task routing and version checks. This file
+covers Unity 6 setup, native dependency resolution, initialization, and the
+callback-based attribution API.
 
 Unity has no official Appstack integration with Superwall or RevenueCat. Do not
 apply the partner wiring examples from the other platform references to Unity.
@@ -93,8 +93,8 @@ AppstackSDK.SendEvent(
 Send `email`, `name`, `phone_number`, `date_of_birth` and `gender` on a
 `user_attributes` custom event **once per user, right after sign-up or login**,
 with whichever fields the app has. Appstack stores them against the install, so
-do not re-send them per session or on revenue events. See `SKILL.md` for the full
-field list and encryption behaviour.
+do not re-send them per session or on revenue events. See
+[event design](event-design.md) for the full field list and encryption behavior.
 
 ```csharp
 AppstackSDK.SendEvent(
@@ -143,10 +143,4 @@ device or store build.
       `Editor/AppstackDependencies.xml` is present in `unityLibrary`.
 - [ ] Auto-initialization settings or one manual `Configure` call is used, not
       both.
-- [ ] Platform-specific environment keys are configured without relying on
-      deprecated `isDebug` behavior.
 - [ ] Apple Ads is enabled only on iOS device builds.
-- [ ] `INSTALL` is never sent manually; revenue events include revenue/price and
-      currency; custom events remain few and descriptive.
-- [ ] Matching params sent on a `user_attributes` event once per user, not per
-      session and not on revenue events.

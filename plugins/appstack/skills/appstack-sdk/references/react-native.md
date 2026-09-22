@@ -1,8 +1,7 @@
 # Appstack React Native SDK
 
-Read `SKILL.md` first for the cross-cutting rules (event taxonomy, EACs,
-environments, limitations). This file covers React Native-specific setup,
-real-world usage, and partner integrations.
+Read [SKILL.md](../SKILL.md) for task routing and version checks. This file
+covers React Native setup, call shapes, migration, and supported partner wiring.
 
 ## First: check which major is installed
 
@@ -17,8 +16,8 @@ npm ls react-native-appstack-sdk
 
 - **3.x** → use this file as written.
 - **2.x** → the API below does not apply. Use the mapping in
-  [Migrating 2.x → 3.0](#migrating-2x--30) to read the existing code, and
-  recommend the upgrade.
+  [Migrating 2.x → 3.0](#migrating-2x--30) to interpret existing code. Upgrade
+  only if requested or required for the fix.
 
 Getting this backwards is **not symmetric**, so do the check rather than
 assuming:
@@ -167,7 +166,7 @@ Values must also be JSON-*representable* at runtime, which the type system
 cannot enforce. Guard computed numbers in particular: `{ revenue: price *
 quantity }` with an undefined operand yields `NaN`, which is typed `number` but
 is not valid JSON. Send a checked number or omit the key — see
-`SKILL.md` for why this matters on every platform.
+[event design](event-design.md) for why this matters on every platform.
 
 ### Real-world examples
 
@@ -281,17 +280,8 @@ const offerings = await Purchases.setAppstackAttributionParams(params);
 - [ ] Resolved major confirmed via `npm ls`; code matches that major.
 - [ ] `react-native-appstack-sdk` installed; `pod install` run for iOS.
 - [ ] Meets RN 0.72+, Node 16+, iOS 15+, Android min 21/target 34+, Java 17+.
-- [ ] Separate iOS/Android keys; correct environment keys per build; keys not in source.
 - [ ] `configure` runs once at startup before any event; return value checked.
 - [ ] `configure` uses the options object; no positional/`isDebug` call remains.
 - [ ] No `sendEvent` call passes three arguments or `'CUSTOM'`.
 - [ ] No code branches on `sendEvent`'s return value.
 - [ ] iOS-only calls guarded with `Platform.OS === 'ios'`.
-- [ ] `INSTALL` never sent manually.
-- [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency`, and computed
-      revenue values are guarded against `NaN`.
-- [ ] Matching params sent on a `user_attributes` event once per user, not per
-      session and not on revenue events.
-- [ ] `expo-superwall` used for Superwall; partner attrs set after `configure`.
-- [ ] Events visible on the Appstack SDK page before launch.

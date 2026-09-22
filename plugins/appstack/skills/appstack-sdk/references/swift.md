@@ -1,8 +1,7 @@
 # Appstack Swift SDK (iOS)
 
-Read `SKILL.md` first for the cross-cutting rules (event taxonomy, EACs,
-environments, limitations). This file covers iOS-specific setup, real-world
-usage, and partner integrations.
+Read [SKILL.md](../SKILL.md) for task routing and version checks. This file
+covers iOS setup, call shapes, and supported partner wiring.
 
 ## Requirements
 
@@ -215,16 +214,7 @@ AppstackAttributionSdk.shared.configure(
 
 ## Verification checklist
 
-- [ ] Package added from the correct URL, latest stable version.
+- [ ] Package added from the correct URL; resolved version confirmed.
 - [ ] Target meets iOS 15.0+ / Xcode 16.0+ / Swift 6-compatible toolchain.
-- [ ] Correct production or development key is selected; `isDebug` is not used
-      as an environment switch.
 - [ ] `configure` runs once at startup before any event.
-- [ ] `INSTALL` never sent manually.
-- [ ] Key flows use standard `EventType`s; custom events few and clean.
-- [ ] Revenue events include `revenue`/`price` + `currency`.
-- [ ] Matching params sent on a `user_attributes` event once per user, not per
-      session and not on revenue events.
 - [ ] Apple Ads attribution enabled only on iOS 15+ after configuration.
-- [ ] Partner IDs/attributes set after `configure`, before first paywall.
-- [ ] Events visible on the Appstack SDK page before launch.
