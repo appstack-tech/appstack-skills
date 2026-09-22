@@ -4,10 +4,18 @@ Read [SKILL.md](../SKILL.md) for platform and version routing. Use the platform
 reference for the actual `sendEvent` signature; these rules describe which
 events and parameters to send.
 
+Appstack is an attribution platform, not a general event aggregator. Before
+adding an event or parameter, identify its role in campaign attribution,
+conversion reporting, matching, or a signal the app wants forwarded to ad
+networks. If it serves only in-app behavior or funnel analysis, leave it to a
+product-analytics tool. Send the fields needed for that role, not every value
+available at the point where the event fires.
+
 ## Standard and custom events
 
 Standard `EventType` values map to ad-network optimization events. Prefer one
-when it represents the action:
+when it represents a relevant action; this list is a set of options, not an
+instrumentation checklist:
 
 - Account: `LOGIN`, `SIGN_UP`, `REGISTER`
 - Monetization: `PURCHASE`, `ADD_TO_CART`, `ADD_TO_WISHLIST`,
@@ -20,21 +28,22 @@ custom event with the `CUSTOM` event type plus a separate name. React Native
 3.x sends the custom name as the event argument; it rejects literal `CUSTOM`.
 `INSTALL` is recorded automatically on initialization.
 
-Keep custom events to a handful of genuinely app-specific signals. Fewer than
-about 10 distinct names is a review guideline, not an SDK limit. If a taxonomy
-has many custom events, first look for standard-event equivalents and
-near-duplicates (`buy`, `bought`, `purchase_done` → `PURCHASE`). Custom events
-are not universally usable for campaign optimization; TikTok optimization uses
-standard events. Use consistent, descriptive `snake_case` names for the custom
-events that remain. Broad screen or tap analytics belongs in a product-analytics
-tool.
+Keep custom events to a handful of app-specific attribution or ad-network
+signals. Fewer than about 10 distinct names is a review guideline, not an SDK
+limit. If a taxonomy has many custom events, first look for standard-event
+equivalents and near-duplicates (`buy`, `bought`, `purchase_done` → `PURCHASE`).
+Custom events are not universally usable for campaign optimization; TikTok
+optimization uses standard events. Use consistent, descriptive `snake_case`
+names for the custom events that remain. Broad screen or tap analytics belongs
+in a product-analytics tool.
 
 ## Names and parameters
 
-Event names are identifiers, not payloads. Put personal data, item IDs, prices,
-and level numbers in parameters rather than making a new event name per value.
-For example, use `LEVEL_COMPLETE` with a `level` parameter instead of
-`level_47_complete`.
+Event names are identifiers, not payloads. If an item ID, price, level number,
+or matching field is needed for the purpose above, put it in a parameter rather
+than making a new event name per value. For example, use `LEVEL_COMPLETE` with
+a `level` parameter instead of `level_47_complete` when level progression is a
+campaign signal.
 
 Parameters must serialize to JSON: strings, finite numbers, booleans, and
 nested arrays or objects of those values. Convert dates to `YYYY-MM-DD` or an

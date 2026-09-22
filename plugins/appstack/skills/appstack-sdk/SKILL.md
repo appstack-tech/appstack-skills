@@ -10,8 +10,8 @@ description: >-
 # Appstack SDK
 
 Appstack measures installs and post-install events for ad attribution and
-campaign optimization. Treat it as an attribution SDK: choose events that help
-ad networks optimize, rather than instrumenting every screen or tap.
+campaign optimization. It is not a general event aggregator: send only events
+and parameters that serve attribution or signals intended for ad networks.
 
 ## Start with the task and installed version
 
