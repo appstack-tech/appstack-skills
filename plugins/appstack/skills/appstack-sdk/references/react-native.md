@@ -52,8 +52,12 @@ beyond installing the package.
 
 ## Initialize (app startup, once)
 
-Default import `AppstackSDK`. `configure` is async and **returns `true`/`false`**
-— check it. Use **platform-specific API keys** and keep them out of source.
+Default import `AppstackSDK`. `configure` is async and resolves `true`/`false`,
+but that value only acknowledges the call: SDK setup continues asynchronously
+afterward, so `true` does not mean initialization finished. Do not gate later
+calls on it or treat an unchecked return as a bug. What matters is that a
+non-empty, **platform-specific API key** reaches `configure`; keep keys out of
+source.
 
 ```javascript
 import { useEffect } from 'react';
@@ -69,10 +73,9 @@ const App = () => {
       });
       if (!apiKey) { console.error('Appstack API key not configured'); return; }
 
-      const configured = await AppstackSDK.configure(apiKey, {
+      await AppstackSDK.configure(apiKey, {
         logLevel: __DEV__ ? 0 : 1,
       });
-      if (!configured) { console.error('SDK configuration failed'); return; }
 
       // Apple Ads attribution — iOS only, guard it
       if (Platform.OS === 'ios') {
@@ -268,8 +271,9 @@ const offerings = await Purchases.setAppstackAttributionParams(params);
 
 - **A call throws naming "removed in 3.0":** the code is written against 2.x.
   See the migration table above.
-- **Configure fails:** check the boolean return value; verify the platform key,
-  that `logLevel` is an integer 0–3, and network.
+- **Configure fails:** verify the platform key is present and non-empty, that
+  `logLevel` is an integer 0–3, and network; use `logLevel: 0` for SDK logs.
+  The boolean return only acknowledges the call and is not a setup signal.
 - **Events missing:** check network, correct per-platform key, allow a few
   minutes. A misspelled standard event becomes a custom event — check the
   `__DEV__` warning.
@@ -280,7 +284,7 @@ const offerings = await Purchases.setAppstackAttributionParams(params);
 - [ ] Resolved major confirmed via `npm ls`; code matches that major.
 - [ ] `react-native-appstack-sdk` installed; `pod install` run for iOS.
 - [ ] Meets RN 0.72+, Node 16+, iOS 15+, Android min 21/target 34+, Java 17+.
-- [ ] `configure` runs once at startup before any event; return value checked.
+- [ ] `configure` runs once at startup before any event, with a non-empty platform key.
 - [ ] `configure` uses the options object; no positional/`isDebug` call remains.
 - [ ] No `sendEvent` call passes three arguments or `'CUSTOM'`.
 - [ ] No code branches on `sendEvent`'s return value.
