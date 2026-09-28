@@ -126,6 +126,69 @@ This applies to every tool, not just `query_metrics` — a `list_dashboards`/
 `list_metrics` schema dump, get translated before reaching the user the same
 way, unless they asked for the schema/query itself.
 
+## Sanity-check results before answering
+
+Before presenting a `query_metrics` (or cohort) result, scan it for shapes
+that usually mean something's wrong upstream — in the data or in how the
+query was built — rather than a real business result. None of these prove a
+bug; they're signals to double-check and, if they hold up, to mention rather
+than silently pass through.
+
+- **Negative values on a measure that's never legitimately negative** — spend,
+  installs, revenue, clicks, impressions. Check `list_metrics`'s description
+  first in case the view has a genuine clawback/adjustment measure where a
+  negative value is expected.
+- **A zero-count gap for a day sandwiched between non-zero days** in an
+  otherwise continuous range — different from zero at the very start of a
+  range (before the app existed) or the very end (today, still incomplete),
+  which are expected.
+- **A day-over-day swing of an order of magnitude or more** with no filter
+  change to explain it (e.g. spend jumps from $500/day to $50,000/day
+  overnight) — plausible as a real campaign launch, implausible as a steady
+  baseline shift.
+- **Implausible derived ratios** — CTR over 100%, ROAS wildly disproportionate
+  to spend, CPI negative or near-zero while spend is nonzero, or (in
+  `eac_cohorts_view`) `proceeds` exceeding `revenue` — proceeds is revenue net
+  of store fees, so it should never be the larger number.
+- **Totals that don't reconcile across two views describing the same thing**
+  under matching filters (e.g. "EAC installs" via `events_view` vs. via
+  `eac_cohorts_view` with `media_source != 'apple'` giving very different
+  numbers for the same app/date range) — don't silently pick one number over
+  the other.
+- **Any row dated after today** showing nonzero installs/spend/revenue — this
+  has no legitimate explanation (unlike the others above, there's no
+  "plausible" version of this one) and usually points to a timezone or
+  date-arithmetic bug either upstream or in the query itself.
+
+**One exception, to avoid a false alarm:** `total_spend`, `impressions`, and
+`clicks` are synced from each ad network's own API, and the tooltip on those
+measures already warns same-day values are unreliable — don't treat *today's*
+figures for those three specifically as a zero-count gap or a swing. This
+doesn't extend to installs or revenue, which aren't network-synced, so a
+same-day drop in those is still worth flagging.
+
+**A separate, higher-urgency case: a scope leak.** If any returned row's
+`app_id`/`app_name` isn't one of the app_ids `whoami` reported for this
+credential, stop — that's not a data-quality quirk, it's a potential
+authorization bug. Tell the user immediately rather than
+folding it into a routine "heads up," and always call `report_data_anomaly`
+for it, regardless of whether the user seems to care about the specific
+numbers.
+
+When one of the other cases holds, say so in plain language alongside the
+answer — e.g. "Heads up: spend on March 4th shows as -$120, which shouldn't
+happen for an ad-spend metric — the rest of the numbers below look normal."
+Don't withhold the data or refuse to answer; surface the anomaly and let the
+user judge how much to trust the number.
+
+After warning the user, also call `report_data_anomaly` with the query that
+produced it (measures/dimensions/filters/time_dimension/date_range) and the
+specific anomalous row(s) — this is in addition to the user-facing warning,
+not instead of it, and turns the moment into an inbound bug report the
+Appstack team can triage. Don't call it for something the user themselves
+flagged as expected/explained (e.g. "yeah we know, campaign launched that
+day") — only for a shape you independently judged to look wrong.
+
 ## Tool inventory
 
 | Tool | Use it for | Notes |
@@ -135,6 +198,7 @@ way, unless they asked for the schema/query itself.
 | `list_metrics` | Discovering measure/dimension names before querying. | Call before guessing, not after failing |
 | `list_dimension_values` | Discovering valid filter values before filtering. | Same — call before guessing |
 | `query_metrics` | Actual numbers: spend, revenue, installs, ROAS, breakdowns. | |
+| `report_data_anomaly` | Logging a data inconsistency (see sanity-check rules above) for the Appstack team to review. | **Writes real data** — call after warning the user, not instead of it |
 | `list_integrations` | Whether an ad network/MMP/subscription platform is connected and its status. | |
 | `get_onboarding_checklist` | Setup progress for a project. | |
 | `list_dashboards` / `get_dashboard` | Saved dashboards and their widgets' configured measures/dimensions — already resolved to full `cube_name.field_name` paths, ready for `query_metrics`. | |
