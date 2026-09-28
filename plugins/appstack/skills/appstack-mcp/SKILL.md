@@ -74,6 +74,33 @@ Cohorts (`eac_cohorts`/`core_eac_cohorts`) don't need a different tool —
 they're reachable through the same `list_metrics`/`query_metrics` calls as
 any other Cube view.
 
+## Interpreting ambiguous phrasing
+
+Users describe attribution in casual terms that don't map 1:1 to a view or
+dimension name. Don't guess which view a phrase means — use this table, and
+when a term carries a caveat, say so rather than silently picking a side.
+
+| User says | Usually means | How to query it |
+| --- | --- | --- |
+| "web installs" / "eac installs" / "Appstack installs" | Installs attributed by Appstack's own tracking (EAC) — not the ad network's native app campaign, not Apple Ads | `events_view.install` filtered `events_view.attribution_type = 'appstack'`. **Not** `eac_cohorts_view` by default — see below. |
+| "organic" | No attributed media source | `events_view.source_type = 'organic'` (equivalently `attribution_type = 'organic'`) |
+| "non-organic" / "paid" / "ad network" | Anything attributed to a media source, any campaign type | `events_view.source_type = 'non_organic'` |
+| "Apple Ads" / "ASA" / "Apple Search Ads" | Apple's native app-campaign attribution | `events_view.media_source = 'apple'` — this is `attribution_type = 'app'`, never `'appstack'`, so it's never part of an "eac" answer |
+
+### `eac_cohorts_view` is not "the EAC view" — it always includes Apple Ads
+
+`eac_cohorts_view` is built for cohort/retention analysis (installs bucketed
+by days/weeks/months since install), not as a synonym for "EAC installs." Its
+underlying model unions three sources: Appstack/EAC-attributed installs,
+Apple Ads installs, and standard-link installs — by design, every query
+against it includes Apple Ads unless you filter it out.
+
+If a user asks for "eac installs" and either the request needs cohort/
+retention behavior, or you're about to reach for this view just because "eac"
+is in its name: filter `media_source != 'apple'` and tell the user you
+excluded Apple Ads — don't silently include or exclude it, since that changes
+the number either way.
+
 ## Tool inventory
 
 | Tool | Use it for | Notes |
