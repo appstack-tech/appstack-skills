@@ -101,6 +101,31 @@ is in its name: filter `media_source != 'apple'` and tell the user you
 excluded Apple Ads — don't silently include or exclude it, since that changes
 the number either way.
 
+## Speak in plain language, not Cube internals
+
+Measure/dimension paths (`events_view.install`), view names
+(`eac_cohorts_view`), filter objects, and tool names are internal
+implementation details for reasoning about which call to make — not for the
+response. Default to describing what was measured and how it was filtered in
+plain business language, e.g. "EAC-attributed installs, excluding Apple Ads,"
+not "`events_view.install` filtered `attribution_type = 'appstack' AND
+media_source != 'apple'`."
+
+Only surface raw Cube member names, tool names, or filter objects when the
+user explicitly asks (e.g. "what query did you run," "what filter/dimension
+did you use," "show me the raw query"). A few translations to default to:
+
+- `events_view.install` → "installs"
+- `events_view.total_spend` → "ad spend"
+- `attribution_type = 'appstack'` → "Appstack-attributed (EAC)"
+- `source_type = 'organic'` / `'non_organic'` → "organic" / "paid"
+- `media_source = 'apple'` → "Apple Ads"
+
+This applies to every tool, not just `query_metrics` — a `list_dashboards`/
+`get_dashboard` response's already-resolved `cube_name.field_name` paths, or a
+`list_metrics` schema dump, get translated before reaching the user the same
+way, unless they asked for the schema/query itself.
+
 ## Tool inventory
 
 | Tool | Use it for | Notes |
