@@ -54,6 +54,14 @@ confirmed exists, call `list_metrics` (schema) or `list_dimension_values`
 (valid values) first — unless you already have that schema in context from
 earlier in the same session, in which case reuse it instead of re-fetching.
 
+`list_metrics` is two-step: with no argument it returns a compact index of the
+available views (name, description, measure/dimension counts); call it again
+with `view="<name>"` to get that view's measures and dimensions. There is more
+than one view — `events_view` holds ad-network and attribution metrics
+(impressions, clicks, CTR, CPM, spend, installs), `eac_cohorts_view` holds
+cohorts by install date — so never conclude a metric doesn't exist after
+reading a single view.
+
 **Concrete example of the failure mode this prevents:** the install-count
 measure is `events_view.install` — **singular**, not `events_view.installs`.
 A plural guess (the more natural English form) fails outright rather than
@@ -193,17 +201,17 @@ day") — only for a shape you independently judged to look wrong.
 
 | Tool | Use it for | Notes |
 | --- | --- | --- |
-| `whoami` | App/org scope. Call first, every session. | |
+| `whoami` | App/org scope, and each app's `project_id`. Call first, every session. | |
 | `find_organization` | Resolving a company name to app scope. | Platform-admin scope only |
-| `list_metrics` | Discovering measure/dimension names before querying. | Call before guessing, not after failing |
+| `list_metrics` | Discovering views, then a view's measure/dimension names before querying. | Index first, then `view="..."`. Call before guessing, not after failing |
 | `list_dimension_values` | Discovering valid filter values before filtering. | Same — call before guessing |
 | `query_metrics` | Actual numbers: spend, revenue, installs, ROAS, breakdowns. | |
 | `report_data_anomaly` | Logging a data inconsistency (see sanity-check rules above) for the Appstack team to review. | **Writes real data** — call after warning the user, not instead of it |
 | `list_integrations` | Whether an ad network/MMP/subscription platform is connected and its status. | |
-| `get_onboarding_checklist` | Setup progress for a project. | |
-| `list_dashboards` / `get_dashboard` | Saved dashboards and their widgets' configured measures/dimensions — already resolved to full `cube_name.field_name` paths, ready for `query_metrics`. | |
+| `get_onboarding_checklist` | Setup progress for a project. | Pass `app_id` (from `whoami`), not an organization id. Several projects in scope → it lists them and asks |
+| `list_dashboards` / `get_dashboard` | Saved dashboards and their widgets' configured measures/dimensions — already resolved to full `cube_name.field_name` paths, ready for `query_metrics`. | `list_dashboards` takes an `app_id` (from `whoami`) or a `project_id` (also on each `whoami` app) — never an organization id |
 | `list_user_journeys` / `get_user_journey_filters` / `get_user_journey` | Per-user event timelines ("Appstack ID history"). | Call the `_filters` variant before filtering, same discover-first rule |
-| `create_link` / `list_links` / `get_link` / `update_link` / `delete_link` | Standard links only (not ad-network links). | **These write real data** — confirm what you're about to create/change/delete before calling, don't chain them speculatively |
+| `create_link` / `list_links` / `get_link` / `update_link` / `delete_link` | Standard links only (not ad-network links). Each link carries `custom_params` (its client-defined query params, read-only). | **These write real data** — confirm what you're about to create/change/delete before calling, don't chain them speculatively |
 
 ## Efficiency patterns
 
